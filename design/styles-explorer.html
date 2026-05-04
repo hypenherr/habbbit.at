@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>50 Design Styles — Explorer</title>
+<style>
+  /* ---------- Tokens ---------- */
+  :root{
+    --bg:#faf9f6;
+    --surface:#ffffff;
+    --surface-soft:#f4f0e6;
+    --ink:#141414;
+    --ink-soft:#3b3b3b;
+    --muted:#7a7974;
+    --line:#e7e2d5;
+    --line-soft:#f0ece0;
+    --chip:#f2ede1;
+    --chip-ink:#2a2a2a;
+    --chip-active:#141414;
+    --chip-active-ink:#faf9f6;
+    --accent:#141414;
+    --focus:#2563eb;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.04);
+    --shadow-md:0 6px 18px rgba(0,0,0,.06);
+    --shadow-lg:0 30px 80px rgba(0,0,0,.25);
+    --radius-sm:8px;
+    --radius-md:12px;
+    --radius-lg:16px;
+    --pad-gut:32px;
+    --ease:cubic-bezier(.2,.7,.2,1);
+    --serif:"Playfair Display","Didot","Cormorant Garamond",Georgia,serif;
+    --sans:"Inter","Helvetica Neue",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  /* The HTML [hidden] attribute must always win over any display:* rules below. */
+  [hidden]{display:none!important}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  button{font:inherit;cursor:pointer;border:0;background:none;color:inherit;padding:0}
+  input{font:inherit}
+  *:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:6px}
+
+  /* ---------- Header ---------- */
+  header{padding:28px var(--pad-gut) 18px}
+  .title-row{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}
+  h1{font-family:var(--serif);font-weight:500;font-size:40px;line-height:1.05;letter-spacing:-.01em;margin:0}
+  .lede{color:var(--muted);font-size:13.5px;max-width:680px;margin:6px 0 0}
+  .lede a{color:var(--ink-soft);text-decoration:underline;text-underline-offset:3px;text-decoration-color:#cfc8b4;transition:color .15s ease, text-decoration-color .15s ease}
+  .lede a:hover{color:var(--ink);text-decoration-color:var(--ink)}
+  .stats{color:var(--muted);font-size:12px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+
+  /* ---------- Sticky chrome (toolbar + filter panel + active bar) ---------- */
+  .sticky-zone{position:sticky;top:0;z-index:8;background:var(--bg);box-shadow:0 8px 18px -18px rgba(0,0,0,.18)}
+  .toolbar{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+           display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:10px var(--pad-gut)}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:13.5px;transition:border-color .15s ease,background .15s ease, transform .15s ease}
+  .btn:hover{border-color:#c8c3b4}
+  .btn:active{transform:scale(.985)}
+  .btn .badge{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--ink);color:var(--bg);font-size:11px;font-weight:600}
+  .btn .chev{display:inline-flex;align-items:center;color:var(--muted);transition:transform .25s var(--ease)}
+  .btn .chev svg{width:14px;height:14px;display:block}
+  .btn.open .chev{transform:rotate(180deg)}
+
+  .search-wrap{position:relative;min-width:0}
+  .search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--muted);pointer-events:none}
+  .search{width:100%;height:38px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:0 40px 0 34px;font-size:13.5px;color:var(--ink);transition:border-color .15s ease}
+  .search:hover{border-color:#c8c3b4}
+  .search:focus{outline:none;border-color:var(--ink)}
+  .search-clear{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--surface-soft);display:none;place-items:center;color:var(--muted);font-size:13px}
+  .search-clear.show{display:grid}
+  .search-clear:hover{color:var(--ink)}
+
+  /* ---------- Filter panel ---------- */
+  .filter-panel{overflow:hidden;transition:grid-template-rows .3s var(--ease);display:grid;grid-template-rows:1fr;background:var(--bg);border-bottom:1px solid var(--line)}
+  .filter-panel.collapsed{grid-template-rows:0fr;border-bottom-color:transparent}
+  .filter-panel > .inner{min-height:0;padding:16px var(--pad-gut) 14px}
+  /* Apply scroll/max-height only when expanded; when collapsed, .inner must collapse to 0 height. */
+  .filter-panel:not(.collapsed) > .inner{max-height:62vh;overflow:auto;overscroll-behavior:contain}
+  .filter-panel.collapsed > .inner{padding-top:0;padding-bottom:0;visibility:hidden}
+
+  .filter-row{display:grid;grid-template-columns:150px 1fr;gap:18px;padding:10px 0;border-top:1px dashed var(--line-soft)}
+  .filter-row:first-child{border-top:0}
+  .filter-label{display:flex;flex-direction:column;gap:2px;padding-top:6px}
+  .filter-label .name{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .filter-label .hint{font-size:11px;color:#b4ae9d}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border:1px solid var(--line);background:var(--chip);color:var(--chip-ink);
+        border-radius:999px;font-size:12.5px;transition:background .15s ease,color .15s ease,border-color .15s ease,transform .15s ease,opacity .15s ease;white-space:nowrap}
+  .chip:hover{border-color:#b9b3a1}
+  .chip .cnt{color:var(--muted);font-size:10.5px;font-variant-numeric:tabular-nums}
+  .chip.active{background:var(--chip-active);color:var(--chip-active-ink);border-color:var(--chip-active)}
+  .chip.active .cnt{color:rgba(250,249,246,.75)}
+  .chip.dim{opacity:.35}
+  /* Default: chips beyond the initial row are hidden. When the row is .expanded, show them. */
+  .filter-row .chip.over-limit{display:none}
+  .filter-row.expanded .chip.over-limit{display:inline-flex}
+  /* Search filter overrides everything: hide non-matching chips regardless of expand state. */
+  .filter-row .chip.search-hide{display:none!important}
+  .show-more{border:0;background:transparent;color:var(--muted);font-size:12px;padding:5px 8px;border-radius:999px;text-decoration:underline;text-underline-offset:3px;text-decoration-color:#d9d3c1}
+  .show-more:hover{color:var(--ink);text-decoration-color:var(--ink)}
+  .show-more.is-hidden{display:none}
+
+  /* ---------- Active bar ---------- */
+  .active-bar{display:flex;align-items:center;gap:10px;padding:10px var(--pad-gut);min-height:46px;background:var(--bg);border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .active-bar .label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+  .active-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:var(--ink);color:var(--bg);font-size:12px}
+  .active-chip .x{opacity:.7}
+  .active-chip:hover .x{opacity:1}
+  .clear-all{margin-left:auto;font-size:12px;color:var(--muted);border:1px solid var(--line);padding:4px 10px;border-radius:999px;background:var(--bg)}
+  .clear-all:hover{color:var(--ink);border-color:var(--ink)}
+
+  /* ---------- Grid ---------- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;padding:22px var(--pad-gut) 80px}
+  .card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;cursor:pointer;transition:transform .2s var(--ease), box-shadow .2s ease, border-color .15s ease, opacity .25s ease;animation:fadeIn .4s var(--ease) both}
+  .card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:#d8d3c6}
+  .card:active{transform:translateY(0)}
+  .card .thumb{aspect-ratio:3/4;background:#eee center/cover no-repeat;position:relative}
+  .card .thumb::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom, transparent 55%, rgba(0,0,0,.35));opacity:0;transition:opacity .2s}
+  .card:hover .thumb::after{opacity:1}
+  .card .num{position:absolute;top:10px;left:12px;color:#fff;mix-blend-mode:difference;font-family:var(--serif);font-size:15px;letter-spacing:.05em}
+  .card .body{padding:11px 13px 14px}
+  .card h3{font-family:var(--serif);font-weight:500;font-size:18px;margin:0 0 2px;letter-spacing:-.005em}
+  .card .mini-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+  .card .mini-tag{font-size:10.5px;color:var(--muted);background:var(--surface-soft);border:1px solid var(--line-soft);border-radius:999px;padding:2px 8px;letter-spacing:.01em}
+  .card.hidden{display:none}
+
+  .empty{grid-column:1/-1;text-align:center;padding:80px 24px;color:var(--muted)}
+  .empty h3{font-family:var(--serif);font-size:28px;color:var(--ink-soft);margin:0 0 8px;font-weight:500}
+  .empty p{max-width:420px;margin:0 auto 16px}
+
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* ---------- Modal ---------- */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(10,10,10,.55);backdrop-filter:blur(3px);display:none;z-index:50;animation:fadeIn .25s var(--ease)}
+  .modal-backdrop.open{display:block}
+  .modal{position:fixed;inset:4vh 5vw;background:var(--bg);border-radius:14px;overflow:hidden;display:none;z-index:51;box-shadow:var(--shadow-lg);animation:pop .35s var(--ease)}
+  @keyframes pop{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:none}}
+  .modal.open{display:grid;grid-template-rows:auto minmax(0,1fr) auto}
+
+  /* Cover: full uncut composite image at the top */
+  .cover{margin:0;background:#0d0d0d;display:grid;place-items:center;padding:0}
+  .cover img{display:block;width:100%;max-height:46vh;object-fit:contain;background:#0d0d0d}
+
+  /* Body: two equal columns under the image */
+  .modal-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;padding:24px 32px 28px;overflow:auto;align-items:start}
+  .modal-info{min-width:0}
+  .modal-tags{min-width:0;border-left:1px solid var(--line);padding-left:24px}
+  .num-line{font-family:var(--serif);color:var(--muted);font-size:11.5px;letter-spacing:.22em;text-transform:uppercase}
+  .modal-info h2{font-family:var(--serif);font-weight:500;font-size:34px;line-height:1.08;margin:4px 0 10px;letter-spacing:-.01em}
+  .desc{color:var(--ink-soft);font-size:14.5px;line-height:1.6;margin:0}
+
+  /* External-reference links — small pill row beneath the description. */
+  .refs{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .ref-link{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;
+            background:var(--surface);border:1px solid var(--line);color:var(--ink-soft);
+            text-decoration:none;font-size:12.5px;line-height:1.2;
+            transition:border-color .15s ease, background .15s ease, transform .15s ease}
+  .ref-link:hover{border-color:#b9b3a1;background:var(--surface-soft);color:var(--ink)}
+  .ref-link:active{transform:scale(.97)}
+  .ref-link svg{width:14px;height:14px;flex:0 0 14px}
+  .ref-link .arrow{font-size:11px;color:var(--muted);margin-left:1px}
+  .ref-link:hover .arrow{color:var(--ink)}
+
+  /* Compact tag sections — color of the pills already distinguishes groups,
+     so no dividers needed; tight vertical spacing keeps the section narrow. */
+  .section{display:grid;grid-template-columns:118px 1fr;gap:12px;align-items:baseline;padding:3px 0}
+  .section h4{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:5px 0 0;font-weight:600;white-space:nowrap}
+  .pill-list{display:flex;flex-wrap:wrap;gap:4px}
+  .pill{font-size:11.5px;line-height:1.2;padding:3px 8px;border-radius:999px;background:var(--chip);border:1px solid var(--line);cursor:pointer;transition:background .15s ease, border-color .15s ease, transform .15s ease;color:var(--chip-ink)}
+  .pill:hover{border-color:#b3ac99}
+  .pill:active{transform:scale(.96)}
+  .pill.era{background:#ece8df}
+  .pill.mood{background:#f4e7d3}
+  .pill.elements{background:#e3ece2}
+  .pill.usecase{background:#e9e5f2}
+  .pill.core_terms{background:#f1ebdd}
+  .pill.feels{background:#f8e9e0}
+  .pill.fits{background:#e4ecf1}
+  .modal .close{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:999px;background:rgba(255,255,255,.92);display:grid;place-items:center;color:#333;z-index:3;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+  .modal .close svg{width:16px;height:16px}
+  .modal .close:hover{background:#fff}
+
+  /* Bottom pager strip: prev arrow ← thumbnails → next arrow */
+  .modal-pager{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:18px;align-items:center;
+               padding:14px 28px;border-top:1px solid var(--line);background:var(--bg)}
+  .modal-nav{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;
+             border-radius:999px;background:transparent;color:var(--ink-soft);border:1px solid var(--line);
+             cursor:pointer;transition:background .15s ease, color .15s ease, border-color .15s ease, transform .15s ease}
+  .modal-nav svg{width:18px;height:18px}
+  .modal-nav:hover{background:var(--surface);color:var(--ink);border-color:#b9b3a1}
+  .modal-nav:active{transform:scale(.94)}
+  .modal-nav[disabled]{opacity:.35;pointer-events:none}
+
+  /* Center thumbs when they fit; fall back to start-alignment when they overflow,
+     so horizontal scrolling still works for long filtered lists. */
+  .pager-thumbs{display:flex;gap:6px;overflow-x:auto;scroll-behavior:smooth;
+                justify-content:safe center;
+                scrollbar-width:thin;scrollbar-color:#cfc8b4 transparent;padding:2px 4px}
+  .pager-thumbs::-webkit-scrollbar{height:6px}
+  .pager-thumbs::-webkit-scrollbar-thumb{background:#cfc8b4;border-radius:3px}
+  .pager-thumbs::-webkit-scrollbar-track{background:transparent}
+  .pager-thumb{flex:0 0 auto;width:32px;height:42px;border-radius:5px;border:1px solid var(--line);
+               background:#eee center/cover no-repeat;cursor:pointer;padding:0;
+               transition:border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+               opacity:.55}
+  .pager-thumb:hover{opacity:.9;border-color:#b9b3a1}
+  .pager-thumb.current{opacity:1;border-color:var(--ink);box-shadow:0 0 0 2px var(--bg), 0 0 0 3px var(--ink);transform:scale(1.06)}
+
+  @media (max-width: 900px){
+    :root{--pad-gut:18px}
+    h1{font-size:32px}
+    .filter-row{grid-template-columns:1fr}
+    .toolbar{grid-template-columns:auto 1fr;row-gap:8px}
+    .stats{display:none}
+    .modal{inset:0;border-radius:0}
+    .modal.open{grid-template-rows:auto minmax(0,1fr) auto}
+    .cover img{max-height:38vh}
+    .modal-body{grid-template-columns:1fr;gap:18px;padding:18px 20px 22px}
+    .modal-tags{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:14px}
+    .section{grid-template-columns:108px 1fr}
+    .modal-pager{padding:10px 16px;gap:12px}
+    .pager-thumb{width:26px;height:35px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *,.card,.modal,.modal-backdrop,.filter-panel,.btn .chev{animation:none!important;transition-duration:.01ms!important}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="title-row">
+    <div>
+      <h1>50 Design Styles</h1>
+      <p class="lede">Filter the design vocabulary by era, mood, elements, or fine-grained keywords. Inspired by the <a href="https://uxplanet.org/50-design-styles-every-designer-should-know-for-better-prompting-56c09d55db62" target="_blank" rel="noopener noreferrer">UX&nbsp;Planet&nbsp;story</a>.</p>
+    </div>
+    <div class="stats"><span id="topcount">50 of 50</span> · <span id="topfilters">0 filters</span></div>
+  </div>
+</header>
+
+<div class="sticky-zone">
+  <div class="toolbar">
+    <button class="btn open" id="toggle" aria-expanded="true" aria-controls="panel">
+      <span>Filters</span>
+      <span class="badge" id="fbadge" hidden>0</span>
+      <span class="chev" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
+      </span>
+    </button>
+    <div class="search-wrap">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+        <circle cx="7" cy="7" r="5"/><line x1="11" y1="11" x2="14.5" y2="14.5"/>
+      </svg>
+      <input type="search" class="search" id="search" placeholder="Search tags — e.g. serif, dreamy, wellness…" aria-label="Search tags">
+      <button class="search-clear" id="searchclear" aria-label="Clear search">×</button>
+    </div>
+    <div class="stats" id="topcount2">50 of 50</div>
+  </div>
+
+  <section class="filter-panel" id="panel" aria-labelledby="toggle"><div class="inner" id="panelInner"></div></section>
+
+  <section class="active-bar" id="activebar" hidden>
+    <span class="label">Active</span>
+    <span id="activechips"></span>
+    <button class="clear-all" id="clearall">Clear all</button>
+  </section>
+</div>
+
+<section class="grid" id="grid"></section>
+
+<div class="modal-backdrop" id="backdrop"></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <button class="close" id="closeBtn" aria-label="Close">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 18 18 6M6 6l12 12"/></svg>
+  </button>
+  <figure class="cover" id="cover">
+    <img id="coverImg" alt="">
+  </figure>
+  <div class="modal-body">
+    <div class="modal-info" id="info"></div>
+    <aside class="modal-tags" id="tags"></aside>
+  </div>
+  <nav class="modal-pager" id="pager" aria-label="Style navigation">
+    <button class="modal-nav prev" id="navPrev" aria-label="Previous style">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.75 15.75 3 12m0 0 3.75-3.75M3 12h18"/></svg>
+    </button>
+    <div class="pager-thumbs" id="pagerThumbs" role="tablist"></div>
+    <button class="modal-nav next" id="navNext" aria-label="Next style">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3"/></svg>
+    </button>
+  </nav>
+</div>
+
+<script id="data" type="application/json">{"groups": {"era": {"Classical & Historical": ["Neoclassical", "Baroque", "Victorian", "Art Deco", "Art Nouveau", "Gothic", "Acanthus", "Filigree", "Tenebrism", "Pointillism"], "Mid-20th Century": ["Bauhaus", "Mid-Century", "Memphis", "Pop Art"], "Digital Age": ["Cybercore", "Synthwave", "Vaporwave", "Y2K", "Pixel Art", "Glassmorphism", "Bento Box", "Neo Frutiger Aero"], "Modern Experimental": ["Brutalism", "Neo-Brutalism", "Graffiti", "Kitsch", "Surrealism", "Modular Typography", "Mixed Media", "Conceptual Sketch", "Rebus", "Utilitarian"], "Folk & Vernacular": ["Bohemian", "Farmhouse / Cottagecore", "Shabby Chic", "South West / Wild West", "Nautical", "Scrapbook"], "East Asian": ["Japandi", "Wabi Sabi", "Kawaii"], "Fantasy & Thematic": ["Steampunk", "Mystical Western", "Dark Magic Academia", "Light Academia", "Anthropomorphic", "Aurora", "Ethereal", "Luxury Typography", "Coquette"]}, "mood": {"Dreamy & Ethereal": ["Aurora", "Ethereal", "Light Academia", "Coquette", "Wabi Sabi", "Neo Frutiger Aero"], "Bold & Loud": ["Memphis", "Pop Art", "Graffiti", "Brutalism", "Neo-Brutalism", "Kitsch", "Modular Typography"], "Regal & Ornate": ["Neoclassical", "Baroque", "Victorian", "Filigree", "Acanthus", "Luxury Typography", "Gothic", "Art Deco"], "Calm & Minimal": ["Japandi", "Bauhaus", "Wabi Sabi", "Utilitarian", "Mid-Century", "Ethereal"], "Nostalgic & Retro": ["Pixel Art", "Synthwave", "Vaporwave", "Y2K", "Scrapbook", "Shabby Chic", "Farmhouse / Cottagecore", "Mid-Century", "Pop Art"], "Dark & Mysterious": ["Tenebrism", "Gothic", "Dark Magic Academia", "Cybercore", "Brutalism"], "Playful & Whimsical": ["Kawaii", "Coquette", "Anthropomorphic", "Pixel Art", "Kitsch", "Memphis", "Pop Art"], "Futuristic & Digital": ["Aurora", "Cybercore", "Synthwave", "Vaporwave", "Y2K", "Glassmorphism", "Neo Frutiger Aero"], "Rustic & Handmade": ["Farmhouse / Cottagecore", "Shabby Chic", "Bohemian", "Scrapbook", "South West / Wild West", "Nautical", "Wabi Sabi", "Mixed Media", "Conceptual Sketch"], "Conceptual & Arty": ["Surrealism", "Pointillism", "Mixed Media", "Modular Typography", "Conceptual Sketch", "Rebus", "Brutalism"]}, "elements": {"Typography-driven": ["Luxury Typography", "Modular Typography", "Rebus", "Bento Box"], "Texture & Material": ["Wabi Sabi", "Steampunk", "Shabby Chic", "Mixed Media", "Farmhouse / Cottagecore", "Scrapbook", "Filigree", "Acanthus", "Baroque"], "Gradient & Glow": ["Aurora", "Synthwave", "Vaporwave", "Glassmorphism", "Neo Frutiger Aero", "Y2K", "Cybercore"], "Geometric & Grid": ["Bauhaus", "Memphis", "Modular Typography", "Bento Box", "Utilitarian", "Mid-Century", "Art Deco"], "Illustrative & Hand-drawn": ["Conceptual Sketch", "Mixed Media", "Graffiti", "Scrapbook", "Anthropomorphic", "Kawaii", "Pointillism", "Surrealism"], "Heavy Contrast": ["Tenebrism", "Gothic", "Brutalism", "Neo-Brutalism", "Pop Art"], "Ornamental & Decorative": ["Baroque", "Filigree", "Acanthus", "Victorian", "Art Nouveau", "Coquette", "Kawaii", "Neoclassical"]}, "usecase": {"Luxury & Premium": ["Neoclassical", "Baroque", "Luxury Typography", "Art Deco", "Victorian", "Filigree"], "Tech & Startup": ["Glassmorphism", "Bento Box", "Cybercore", "Aurora", "Neo Frutiger Aero", "Utilitarian"], "Wellness & Spiritual": ["Aurora", "Ethereal", "Wabi Sabi", "Japandi", "Light Academia"], "Editorial & Publishing": ["Modular Typography", "Mid-Century", "Luxury Typography", "Bauhaus", "Neoclassical", "Light Academia", "Art Nouveau"], "Fashion & Retail": ["Kitsch", "Coquette", "Y2K", "Gothic", "Kawaii", "Shabby Chic", "Vaporwave", "Graffiti"], "Kids & Family": ["Kawaii", "Anthropomorphic", "Pixel Art", "Scrapbook"], "Events & Branding": ["Baroque", "Steampunk", "Nautical", "South West / Wild West", "Mystical Western", "Farmhouse / Cottagecore", "Bohemian", "Dark Magic Academia"]}}, "group_labels": {"era": "Era & Lineage", "mood": "Mood", "elements": "Elements", "usecase": "Use Cases"}, "token_dims": {"core_terms": {"label": "Core Elements", "items": [["serif", 12], ["icons", 6], ["minimal", 5], ["gold", 4], ["neon", 4], ["rounded", 4], ["sans-serif", 4], ["shadows", 4], ["clean", 3], ["contrast", 3], ["deep", 3], ["earthy", 3], ["florals", 3], ["gradients", 3], ["high", 3], ["natural", 3], ["organic", 3], ["paper", 3], ["pastel", 3], ["pinks", 3], ["rich", 3], ["soft", 3], ["antique", 2], ["baby", 2], ["blocks", 2], ["blues", 2], ["blur", 2], ["bold", 2], ["bubbles", 2], ["cacti", 2], ["chrome", 2], ["clashing", 2], ["collage", 2], ["curves", 2], ["frames", 2], ["friendly", 2], ["glass", 2], ["glitch", 2], ["greens", 2], ["hand-drawn", 2], ["iridescent", 2], ["jewel", 2], ["lace", 2], ["leaf", 2], ["leather", 2], ["materials", 2], ["metallic", 2], ["monospaced", 2], ["muted", 2], ["objects", 2], ["paint", 2], ["purples", 2], ["retro", 2], ["spacing", 2], ["stained", 2], ["stone", 2], ["symmetry", 2], ["text", 2], ["ui", 2], ["vhs", 2], ["western", 2]]}, "feels": {"label": "Feels", "items": [["nostalgic", 9], ["futuristic", 5], ["calm", 4], ["dreamy", 4], ["fun", 4], ["romantic", 3], ["adventurous", 2], ["bold", 2], ["clean", 2], ["cozy", 2], ["eclectic", 2], ["elegant", 2], ["expressive", 2], ["friendly", 2], ["ironic", 2], ["modern", 2], ["mystical", 2], ["organic", 2], ["quirky", 2], ["regal", 2], ["rugged", 2], ["scholarly", 2], ["structured", 2], ["timeless", 2]]}, "fits": {"label": "Fits", "items": [["fashion", 8], ["art", 7], ["luxury", 5], ["music", 5], ["portfolios", 5], ["creative", 4], ["editorial", 4], ["events", 4], ["lifestyle", 4], ["posters", 4], ["tech", 4], ["blogs", 3], ["book", 3], ["campaigns", 3], ["experimental", 3], ["games", 3], ["wellness", 3], ["beauty", 2], ["concept", 2], ["covers", 2], ["culture", 2], ["educational", 2], ["event", 2], ["fantasy", 2], ["gothic", 2], ["heritage", 2], ["home", 2], ["indie", 2], ["magazines", 2], ["museum", 2], ["premium", 2], ["storytelling", 2], ["tea", 2], ["tools", 2]]}}, "token_full": {"core_terms": [["serif", 12], ["icons", 6], ["minimal", 5], ["gold", 4], ["neon", 4], ["rounded", 4], ["sans-serif", 4], ["shadows", 4], ["clean", 3], ["contrast", 3], ["deep", 3], ["earthy", 3], ["florals", 3], ["gradients", 3], ["high", 3], ["natural", 3], ["organic", 3], ["paper", 3], ["pastel", 3], ["pinks", 3], ["rich", 3], ["soft", 3], ["antique", 2], ["baby", 2], ["blocks", 2], ["blues", 2], ["blur", 2], ["bold", 2], ["bubbles", 2], ["cacti", 2], ["chrome", 2], ["clashing", 2], ["collage", 2], ["curves", 2], ["frames", 2], ["friendly", 2], ["glass", 2], ["glitch", 2], ["greens", 2], ["hand-drawn", 2], ["iridescent", 2], ["jewel", 2], ["lace", 2], ["leaf", 2], ["leather", 2], ["materials", 2], ["metallic", 2], ["monospaced", 2], ["muted", 2], ["objects", 2], ["paint", 2], ["purples", 2], ["retro", 2], ["spacing", 2], ["stained", 2], ["stone", 2], ["symmetry", 2], ["text", 2], ["ui", 2], ["vhs", 2], ["western", 2], ["3d", 1], ["8-bit/16-bit", 1], ["absence", 1], ["advertising", 1], ["analog", 1], ["anchors", 1], ["angular", 1], ["annotations", 1], ["aqua", 1], ["asymmetry", 1], ["beige/gray", 1], ["ben-day", 1], ["bespoke", 1], ["black", 1], ["black/gold", 1], ["blackletter", 1], ["blacks", 1], ["block", 1], ["blushing", 1], ["books", 1], ["boomerangs", 1], ["boots", 1], ["brass", 1], ["bright", 1], ["busts", 1], ["buttons", 1], ["calligraphy", 1], ["candles", 1], ["cartoonish", 1], ["character-based", 1], ["cheeks", 1], ["chiaroscuro", 1], ["circles/triangles/squares", 1], ["clusters", 1], ["code", 1], ["cogwheels", 1], ["columns", 1], ["comic", 1], ["components", 1], ["concrete", 1], ["copper", 1], ["cowboy", 1], ["creamy", 1], ["crosshatching", 1], ["cursive", 1], ["curving", 1], ["cutouts", 1], ["cyan", 1], ["dainty", 1], ["damask", 1], ["decoration", 1], ["default", 1], ["delicate", 1], ["denim", 1], ["digital", 1], ["disjointed", 1], ["display", 1], ["dot", 1], ["dots", 1], ["dripping", 1], ["edges", 1], ["etchings", 1], ["ethnic", 1], ["excess", 1], ["expressive", 1], ["eyes", 1], ["faces", 1], ["fade", 1], ["faded", 1], ["feathered", 1], ["flair", 1], ["floral", 1], ["flourishes", 1], ["flowing", 1], ["foil", 1], ["freestyle", 1], ["frosted", 1], ["gauzy", 1], ["geometric", 1], ["gilded", 1], ["gingham", 1], ["gloss", 1], ["glows", 1], ["golds", 1], ["grayscale", 1], ["greek", 1], ["green/black", 1], ["greyscale", 1], ["grid", 1], ["grid-based", 1], ["grids", 1], ["hand", 1], ["hand-lettered", 1], ["handwritten", 1], ["harsh", 1], ["hats", 1], ["heart", 1], ["heavy", 1], ["horizons", 1], ["hybrids", 1], ["image-type", 1], ["impressionist", 1], ["industrial", 1], ["inks", 1], ["japanese", 1], ["labels", 1], ["large", 1], ["laurel", 1], ["letter", 1], ["letterforms", 1], ["lettering", 1], ["letters", 1], ["ligatures", 1], ["lights", 1], ["limbs", 1], ["limited", 1], ["linen", 1], ["lo-fi", 1], ["look", 1], ["low", 1], ["low-res", 1], ["mandalas", 1], ["marble", 1], ["matrix", 1], ["melting", 1], ["metaphors", 1], ["micro-animations", 1], ["mixing", 1], ["mod", 1], ["modular", 1], ["monochrome", 1], ["monogram", 1], ["ms", 1], ["mythological", 1], ["navy", 1], ["neutral", 1], ["neutrals", 1], ["oil", 1], ["on", 1], ["optical", 1], ["ornate", 1], ["outdated", 1], ["outlines", 1], ["overlays", 1], ["pastels", 1], ["pearls", 1], ["pencil/ink", 1], ["photo", 1], ["pictograms", 1], ["pixel", 1], ["plastic", 1], ["polaroid", 1], ["pottery", 1], ["primaries", 1], ["primary", 1], ["puns", 1], ["purple", 1], ["purposeful", 1], ["red-blue-yellow", 1], ["reds", 1], ["religious", 1], ["ribbon", 1], ["ropes", 1], ["rough", 1], ["sans", 1], ["sans-serifs", 1], ["scale", 1], ["script", 1], ["semi-transparency", 1], ["semi-transparent", 1], ["shiny", 1], ["sketch", 1], ["smoke", 1], ["solid", 1], ["speech", 1], ["spellbooks", 1], ["spotlighting", 1], ["spray", 1], ["squiggles", 1], ["stark", 1], ["steam", 1], ["stencil", 1], ["stickers", 1], ["stripes", 1], ["subtle", 1], ["sun/moon", 1], ["sunbursts", 1], ["sunlight", 1], ["symbology", 1], ["symbols", 1], ["symmetrical", 1], ["systems", 1], ["tape", 1], ["tarot", 1], ["tech", 1], ["terracotta", 1], ["textiles", 1], ["themes", 1], ["tints", 1], ["top", 1], ["transitions", 1], ["translucent", 1], ["typographic", 1], ["unexpected", 1], ["uniform", 1], ["variable", 1], ["vines", 1], ["washi", 1], ["wave", 1], ["white", 1], ["whitewashed", 1], ["wood", 1], ["woods", 1], ["wreaths", 1]], "feels": [["nostalgic", 9], ["futuristic", 5], ["calm", 4], ["dreamy", 4], ["fun", 4], ["romantic", 3], ["adventurous", 2], ["bold", 2], ["clean", 2], ["cozy", 2], ["eclectic", 2], ["elegant", 2], ["expressive", 2], ["friendly", 2], ["ironic", 2], ["modern", 2], ["mystical", 2], ["organic", 2], ["quirky", 2], ["regal", 2], ["rugged", 2], ["scholarly", 2], ["structured", 2], ["timeless", 2], ["and experimental typography", 1], ["and home decor", 1], ["and technical interfaces", 1], ["anti-establishment", 1], ["artistic", 1], ["avant-garde", 1], ["branding systems", 1], ["campy", 1], ["celebratory", 1], ["ceremonial", 1], ["chaotic", 1], ["classical", 1], ["confident", 1], ["contemplative", 1], ["dark", 1], ["defiant", 1], ["delicate", 1], ["disruptive", 1], ["dramatic", 1], ["dystopian", 1], ["edgy", 1], ["efficient. used in manuals", 1], ["elite", 1], ["emotional", 1], ["energetic", 1], ["experimental", 1], ["folklore-driven", 1], ["formal", 1], ["free", 1], ["fresh", 1], ["geeky", 1], ["girly", 1], ["glamorous", 1], ["high fashion", 1], ["historic", 1], ["historical", 1], ["honest", 1], ["humble", 1], ["idea-driven", 1], ["imaginative", 1], ["informal", 1], ["innocent", 1], ["intellectual. works", 1], ["intense", 1], ["intentional", 1], ["jazzy", 1], ["joyful", 1], ["loud", 1], ["luxurious", 1], ["magical", 1], ["maritime", 1], ["meditative", 1], ["minimal", 1], ["modernist", 1], ["moody", 1], ["mysterious", 1], ["noble", 1], ["nostalgic. common in weddings", 1], ["optimistic", 1], ["opulent", 1], ["or aesthetic fashion", 1], ["or mindfulness interfaces", 1], ["or product landing pages", 1], ["organized", 1], ["ornate", 1], ["os ui", 1], ["peaceful", 1], ["playful", 1], ["playful. works for posters", 1], ["poetic", 1], ["practical", 1], ["rational", 1], ["raw-yet-usable", 1], ["refined. works for journals", 1], ["retro-futuristic", 1], ["romantic. works beautifully for spiritual brands", 1], ["sentimental", 1], ["signage", 1], ["sleek. common in apps", 1], ["soulful", 1], ["structural", 1], ["study apps", 1], ["sweet", 1], ["textured", 1], ["thought-provoking", 1], ["tranquil", 1], ["unsettling", 1], ["upscale", 1], ["urban", 1], ["utility apps", 1], ["vibrant", 1], ["vintage", 1], ["vintage boutiques", 1], ["vintage-futuristic", 1], ["warm", 1], ["wholesome", 1], ["witty", 1], ["youthful", 1]], "fits": [["fashion", 8], ["art", 7], ["luxury", 5], ["music", 5], ["portfolios", 5], ["creative", 4], ["editorial", 4], ["events", 4], ["lifestyle", 4], ["posters", 4], ["tech", 4], ["blogs", 3], ["book", 3], ["campaigns", 3], ["experimental", 3], ["games", 3], ["wellness", 3], ["beauty", 2], ["concept", 2], ["covers", 2], ["culture", 2], ["educational", 2], ["event", 2], ["fantasy", 2], ["gothic", 2], ["heritage", 2], ["home", 2], ["indie", 2], ["magazines", 2], ["museum", 2], ["premium", 2], ["storytelling", 2], ["tea", 2], ["tools", 2], ["34", 1], ["abundant", 1], ["academic", 1], ["across", 1], ["aesthetic", 1], ["agency", 1], ["ai", 1], ["ai-dependent", 1], ["allows", 1], ["also", 1], ["alternative", 1], ["anti-establishment", 1], ["apply", 1], ["approachable", 1], ["arcade", 1], ["architects", 1], ["architecture", 1], ["are", 1], ["arent", 1], ["article", 1], ["artisan", 1], ["artisanal", 1], ["artist", 1], ["artistic", 1], ["attaching", 1], ["aurora", 1], ["be", 1], ["beach", 1], ["becoming", 1], ["beyond", 1], ["bhardwaj", 1], ["books", 1], ["brainstorming", 1], ["brief", 1], ["build", 1], ["but", 1], ["can", 1], ["case", 1], ["childrens", 1], ["cinematic", 1], ["clap", 1], ["clarity", 1], ["clean", 1], ["clearly", 1], ["client", 1], ["clubs", 1], ["cocktail", 1], ["conductors", 1], ["connect", 1], ["content", 1], ["cosmetics", 1], ["cosplay-related", 1], ["counterculture", 1], ["create", 1], ["creators", 1], ["crystal", 1], ["dashboards", 1], ["decision", 1], ["decor", 1], ["describe", 1], ["designers", 1], ["devs", 1], ["digital", 1], ["direction", 1], ["dna", 1], ["do", 1], ["each", 1], ["editorials", 1], ["education", 1], ["effectively", 1], ["empowers", 1], ["end", 1], ["ethereal", 1], ["execution", 1], ["faster", 1], ["feel", 1], ["festival", 1], ["festivals", 1], ["fine", 1], ["fintech", 1], ["frontend", 1], ["furniture", 1], ["gamified", 1], ["gaming", 1], ["gear", 1], ["gen", 1], ["generate", 1], ["gets", 1], ["give", 1], ["glad", 1], ["guide", 1], ["hacking", 1], ["handmade", 1], ["having", 1], ["here", 1], ["high-end", 1], ["himanshu", 1], ["how", 1], ["hybrids", 1], ["i", 1], ["ideas", 1], ["if", 1], ["increasingly", 1], ["inspire", 1], ["instantly", 1], ["intentionally", 1], ["is", 1], ["it", 1], ["its", 1], ["journaling", 1], ["journals", 1], ["just", 1], ["kawaii", 1], ["kids", 1], ["know", 1], ["language", 1], ["launches", 1], ["lavish", 1], ["let", 1], ["lies", 1], ["like", 1], ["liked", 1], ["link", 1], ["linkedin", 1], ["list", 1], ["listen", 1], ["literary", 1], ["make", 1], ["markets", 1], ["meditation", 1], ["meets", 1], ["memory", 1], ["message", 1], ["mindful", 1], ["mix", 1], ["moodboards", 1], ["moody", 1], ["motion", 1], ["move", 1], ["museums", 1], ["my", 1], ["name", 1], ["narrows", 1], ["natural", 1], ["neo-brutalist", 1], ["next", 1], ["nostalgia", 1], ["nostalgic", 1], ["not", 1], ["nouveau", 1], ["now", 1], ["on", 1], ["once", 1], ["only", 1], ["options", 1], ["outdoor", 1], ["parody", 1], ["playful", 1], ["pop", 1], ["power", 1], ["presenting", 1], ["pro", 1], ["product", 1], ["productivity", 1], ["profile", 1], ["prompt", 1], ["prompting", 1], ["puzzles", 1], ["ranch", 1], ["reading", 1], ["recipe", 1], ["reels", 1], ["remixes", 1], ["resorts", 1], ["retail", 1], ["retro", 1], ["retro-modern", 1], ["retro-themed", 1], ["revival", 1], ["rich", 1], ["romantic", 1], ["rustic", 1], ["same", 1], ["save", 1], ["saying", 1], ["school", 1], ["seafood", 1], ["share", 1], ["shops", 1], ["show", 1], ["smarter", 1], ["so", 1], ["speak", 1], ["spiritual", 1], ["start", 1], ["stationery", 1], ["streetwear", 1], ["stuck", 1], ["study", 1], ["style", 1], ["styles", 1], ["summer", 1], ["systems", 1], ["tarot", 1], ["team/friends", 1], ["teams", 1], ["than", 1], ["thanks", 1], ["then", 1], ["this", 1], ["throwback", 1], ["till", 1], ["time", 1], ["today", 1], ["translators", 1], ["travel", 1], ["trends", 1], ["try", 1], ["trying", 1], ["typography", 1], ["ui", 1], ["understand", 1], ["up", 1], ["use", 1], ["using", 1], ["ux", 1], ["vaporwave", 1], ["vibe", 1], ["vintage", 1], ["vocabulary", 1], ["want", 1], ["way", 1], ["web", 1], ["web3", 1], ["wedding", 1], ["were", 1], ["where", 1], ["whether", 1], ["while", 1], ["whimsical", 1], ["will", 1], ["witchy", 1], ["world", 1], ["would", 1], ["wrapping", 1], ["x", 1], ["yo", 1], ["you", 1], ["your", 1], ["youth-centric", 1], ["z", 1], ["zines", 1]]}, "styles": [{"num": 1, "name": "Neoclassical", "description": "Neoclassical design is rooted in the grandeur of classical antiquity. It revives Greco-Roman ideals like order, symmetry, and refined elegance. Often used in architecture and interiors, it’s now echoed in UI and brand design to communicate tradition and authority.", "tiles": ["tiles/01_Neoclassical_1.jpg", "tiles/01_Neoclassical_2.jpg", "tiles/01_Neoclassical_3.jpg", "tiles/01_Neoclassical_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_k1t015KDXp45iwzb7rrD6w_002.png", "tags": {"era": ["Classical & Historical"], "mood": ["Regal & Ornate"], "elements": ["Ornamental & Decorative"], "usecase": ["Luxury & Premium", "Editorial & Publishing"]}, "terms_core": ["serif", "columns", "laurel", "wreaths", "marble", "gold", "symmetry", "muted"], "terms_feels": ["formal", "timeless", "noble"], "terms_fits": ["luxury", "museums", "heritage", "academic"], "core_text": ["serif fonts", "columns", "laurel wreaths", "marble textures", "gold accents", "symmetry", "muted palettes"], "mood_adjs": ["formal", "timeless", "noble"], "occasions": ["luxury brands", "museums", "heritage products", "academic publications"]}, {"num": 2, "name": "Baroque", "description": "Baroque design is opulent, emotional, and dramatic. Emerging from 17th-century Europe, it thrives on excess — ornamentation, grandeur, and a theatrical sense of movement. In digital design, it shows up in highly decorative interfaces or dramatic visuals meant to awe.", "tiles": ["tiles/02_Baroque_1.jpg", "tiles/02_Baroque_2.jpg", "tiles/02_Baroque_3.jpg", "tiles/02_Baroque_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_uEYZzXF5O9l9huDmoxsHNQ_004.png", "tags": {"era": ["Classical & Historical"], "mood": ["Regal & Ornate"], "elements": ["Texture & Material", "Ornamental & Decorative"], "usecase": ["Luxury & Premium", "Events & Branding"]}, "terms_core": ["flourishes", "deep", "shadows", "gold", "leaf", "religious", "mythological", "rich", "textiles", "high", "contrast"], "terms_feels": ["regal", "ornate", "celebratory"], "terms_fits": ["event", "premium", "lavish", "editorial"], "core_text": ["flourishes", "deep shadows", "gold leaf", "religious or mythological motifs", "rich textiles", "high contrast"], "mood_adjs": ["regal", "ornate", "celebratory"], "occasions": ["event invitations", "premium packaging", "lavish editorial designs"]}, {"num": 3, "name": "Aurora", "description": "Inspired by the northern lights, Aurora style features flowing, iridescent gradients and dreamy abstractions. It’s futuristic yet soft, often used in ambient digital designs or cosmic brand visuals. It reflects a sense of wonder and fluid motion.", "tiles": ["tiles/03_Aurora_1.jpg", "tiles/03_Aurora_2.jpg", "tiles/03_Aurora_3.jpg", "tiles/03_Aurora_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_UxV_n0HmNpvBPfM68mdieA.png", "tags": {"era": ["Fantasy & Thematic"], "mood": ["Dreamy & Ethereal", "Futuristic & Digital"], "elements": ["Gradient & Glow"], "usecase": ["Tech & Startup", "Wellness & Spiritual"]}, "terms_core": ["iridescent", "gradients", "blur", "soft", "glows", "translucent", "organic", "wave"], "terms_feels": ["dreamy", "futuristic", "meditative"], "terms_fits": ["wellness", "tech", "launches", "spiritual"], "core_text": ["iridescent gradients", "blur effects", "soft glows", "translucent overlays", "organic wave forms"], "mood_adjs": ["dreamy", "futuristic", "meditative"], "occasions": ["wellness apps", "tech product launches", "spiritual themes"]}, {"num": 4, "name": "Ethereal", "description": "Ethereal design captures delicacy and transcendence. It feels weightless and otherworldly — like a design made of mist or light. This style emphasizes openness, airiness, and subtle beauty, often with soft pastels and faint textures.", "tiles": ["tiles/04_Ethereal_1.jpg", "tiles/04_Ethereal_2.jpg", "tiles/04_Ethereal_3.jpg", "tiles/04_Ethereal_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_ta2vQckMnfs7l05oc2d_NA_007.png", "tags": {"era": ["Fantasy & Thematic"], "mood": ["Dreamy & Ethereal", "Calm & Minimal"], "elements": [], "usecase": ["Wellness & Spiritual"]}, "terms_core": ["pastels", "gauzy", "minimal", "serif", "low", "contrast", "feathered", "shadows"], "terms_feels": ["calm", "mystical", "romantic. works beautifully for spiritual brands", "high fashion", "or mindfulness interfaces"], "terms_fits": [], "core_text": ["light pastels", "gauzy overlays", "minimal serif fonts", "low contrast", "feathered shadows"], "mood_adjs": ["calm", "mystical", "romantic. works beautifully for spiritual brands", "high fashion", "or mindfulness interfaces"], "occasions": []}, {"num": 5, "name": "Filigree", "description": "Filigree is a decorative art style characterized by intricate and delicate ornamentation — usually in gold or silver. In design, it translates to fine linework, lacy embellishments, and regal patterns that add an old-world luxury appeal.", "tiles": ["tiles/05_Filigree_1.jpg", "tiles/05_Filigree_2.jpg", "tiles/05_Filigree_3.jpg"], "panels": 3, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_s38hZiFuA5mKsCiRWFBupg_002.png", "tags": {"era": ["Classical & Historical"], "mood": ["Regal & Ornate"], "elements": ["Texture & Material", "Ornamental & Decorative"], "usecase": ["Luxury & Premium"]}, "terms_core": ["delicate", "metallic", "inks", "curves", "lace", "monogram"], "terms_feels": ["luxurious", "vintage", "ceremonial"], "terms_fits": ["heritage", "editorial", "luxury"], "core_text": ["delicate line patterns", "metallic inks", "curves", "lace textures", "monogram fonts"], "mood_adjs": ["luxurious", "vintage", "ceremonial"], "occasions": ["heritage branding", "editorial layouts", "luxury packaging"]}, {"num": 6, "name": "Acanthus", "description": "The Acanthus style is rooted in classical architectural ornamentation, inspired by the acanthus plant’s foliage. Commonly seen in Corinthian columns and decorative arts, it symbolizes endurance and elegance. In design, it’s used for adding a natural yet regal decorative flourish.", "tiles": ["tiles/06_Acanthus_1.jpg", "tiles/06_Acanthus_2.jpg", "tiles/06_Acanthus_3.jpg", "tiles/06_Acanthus_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_Wv3vjM0btR4DcvswArRLYg_006.png", "tags": {"era": ["Classical & Historical"], "mood": ["Regal & Ornate"], "elements": ["Texture & Material", "Ornamental & Decorative"], "usecase": []}, "terms_core": ["leaf", "flowing", "curves", "symmetrical", "vines", "stone", "natural", "greens", "golds"], "terms_feels": ["regal", "organic", "classical"], "terms_fits": ["wedding", "art", "museum", "premium"], "core_text": ["leaf motifs", "flowing curves", "symmetrical vines", "stone textures", "natural greens and golds"], "mood_adjs": ["regal", "organic", "classical"], "occasions": ["wedding invites", "art museum branding", "premium product design"]}, {"num": 7, "name": "Anthropomorphic", "description": "Anthropomorphic design gives human traits to non-human forms — objects, animals, or even UI elements. It adds playfulness and relatability, helping users emotionally connect with the design. Often used in mascots, illustrations, and storytelling interfaces.", "tiles": ["tiles/07_Anthropomorphic_1.jpg", "tiles/07_Anthropomorphic_2.jpg", "tiles/07_Anthropomorphic_3.jpg", "tiles/07_Anthropomorphic_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_EJeuFFiZN-RBI0cVymULIw_007.png", "tags": {"era": ["Fantasy & Thematic"], "mood": ["Playful & Whimsical"], "elements": ["Illustrative & Hand-drawn"], "usecase": ["Kids & Family"]}, "terms_core": ["expressive", "eyes", "limbs", "on", "objects", "character-based", "icons", "rounded", "friendly"], "terms_feels": ["fun", "quirky", "friendly"], "terms_fits": ["childrens", "gamified", "ux", "approachable"], "core_text": ["expressive eyes", "limbs on objects", "character-based icons", "rounded friendly shapes"], "mood_adjs": ["fun", "quirky", "friendly"], "occasions": ["children’s products", "gamified ux", "approachable branding"]}, {"num": 8, "name": "Pixel Art", "description": "Pixel Art is a nostalgic style that harks back to early computer and video game graphics. Each image is built with visible pixels, creating a retro yet playful aesthetic. It’s highly stylized and instantly communicates a love for the analog digital era.", "tiles": ["tiles/08_Pixel_Art_1.jpg", "tiles/08_Pixel_Art_2.jpg", "tiles/08_Pixel_Art_3.jpg", "tiles/08_Pixel_Art_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_rEzNQP5u59qs7-XnDLhN-w_004.png", "tags": {"era": ["Digital Age"], "mood": ["Nostalgic & Retro", "Playful & Whimsical"], "elements": [], "usecase": ["Kids & Family"]}, "terms_core": ["grid-based", "low-res", "icons", "limited", "8-bit/16-bit", "look"], "terms_feels": ["nostalgic", "geeky", "fun"], "terms_fits": ["indie", "games", "retro-themed", "events", "creative", "portfolios"], "core_text": ["grid-based visuals", "low-res icons", "limited color palettes", "8-bit/16-bit look"], "mood_adjs": ["nostalgic", "geeky", "fun"], "occasions": ["indie games", "retro-themed events", "creative portfolios"]}, {"num": 9, "name": "Conceptual Sketch", "description": "This style mimics rough hand-drawn sketches, often used in ideation or artistic branding. It emphasizes spontaneity and imagination over polish. It gives a behind-the-scenes, raw creative feel.", "tiles": ["tiles/09_Conceptual_Sketch_1.jpg", "tiles/09_Conceptual_Sketch_2.jpg", "tiles/09_Conceptual_Sketch_3.jpg", "tiles/09_Conceptual_Sketch_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_aSt7lvokcQha1FjG7F7HsA_002.png", "tags": {"era": ["Modern Experimental"], "mood": ["Rustic & Handmade", "Conceptual & Arty"], "elements": ["Illustrative & Hand-drawn"], "usecase": []}, "terms_core": ["pencil/ink", "crosshatching", "greyscale", "annotations", "sketch", "paper"], "terms_feels": ["experimental", "informal", "idea-driven"], "terms_fits": ["portfolios", "journals", "brainstorming", "tools"], "core_text": ["pencil/ink lines", "crosshatching", "greyscale tones", "annotations", "sketch paper texture"], "mood_adjs": ["experimental", "informal", "idea-driven"], "occasions": ["portfolios", "design journals", "brainstorming tools"]}, {"num": 10, "name": "Luxury Typography", "description": "Luxury Typography relies on refined letterforms to exude elegance and class. It often pairs minimalist layout with expressive serif fonts or custom logotypes, allowing typography alone to carry the brand identity.", "tiles": ["tiles/10_Luxury_Typography_1.jpg", "tiles/10_Luxury_Typography_2.jpg", "tiles/10_Luxury_Typography_3.jpg", "tiles/10_Luxury_Typography_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_42WMcAXoLy5yuDx6eczBZQ_003.png", "tags": {"era": ["Fantasy & Thematic"], "mood": ["Regal & Ornate"], "elements": ["Typography-driven"], "usecase": ["Luxury & Premium", "Editorial & Publishing"]}, "terms_core": ["serif", "high", "letter", "spacing", "gold", "foil", "monochrome", "bespoke", "ligatures"], "terms_feels": ["elegant", "elite", "timeless"], "terms_fits": ["luxury", "fashion", "beauty", "high-end", "editorial"], "core_text": ["serif fonts", "high letter spacing", "gold foil", "monochrome palettes", "bespoke ligatures"], "mood_adjs": ["elegant", "elite", "timeless"], "occasions": ["luxury fashion", "beauty brands", "high-end editorial design"]}, {"num": 11, "name": "Japandi", "description": "Japandi fuses Japanese minimalism with Scandinavian functionality. It focuses on simplicity, craftsmanship, and nature-inspired serenity. In UI, it translates into calm, decluttered interfaces with neutral tones and soft curves.", "tiles": ["tiles/11_Japandi_1.jpg", "tiles/11_Japandi_2.jpg", "tiles/11_Japandi_3.jpg", "tiles/11_Japandi_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_9P9bOBn5OecNi3hf7L1ItQ_002.png", "tags": {"era": ["East Asian"], "mood": ["Calm & Minimal"], "elements": [], "usecase": ["Wellness & Spiritual"]}, "terms_core": ["woods", "beige/gray", "clean", "sans-serif", "minimal", "icons", "natural", "materials"], "terms_feels": ["calm", "peaceful", "intentional"], "terms_fits": ["lifestyle", "home", "decor", "meditation", "wellness"], "core_text": ["light woods", "beige/gray palettes", "clean sans-serif fonts", "minimal icons", "natural materials"], "mood_adjs": ["calm", "peaceful", "intentional"], "occasions": ["lifestyle brands", "home decor", "meditation", "wellness apps"]}, {"num": 12, "name": "Memphis", "description": "Memphis design is bold, loud, and unapologetically fun. Originating in the 1980s, it throws rules out the window with geometric shapes, high contrast colors, and abstract patterns. It’s playful, rebellious, and full of attitude.", "tiles": ["tiles/12_Memphis_1.jpg", "tiles/12_Memphis_2.jpg", "tiles/12_Memphis_3.jpg", "tiles/12_Memphis_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_9GhGsesbTAgI-PjZ6EDBTg_006.png", "tags": {"era": ["Mid-20th Century"], "mood": ["Bold & Loud", "Playful & Whimsical"], "elements": ["Geometric & Grid"], "usecase": []}, "terms_core": ["squiggles", "bright", "primaries", "grids", "clashing", "block", "cartoonish"], "terms_feels": ["youthful", "quirky", "anti-establishment"], "terms_fits": ["creative", "event", "posters", "retro", "fashion"], "core_text": ["squiggles", "bright primaries", "grids", "clashing colors", "block shapes", "cartoonish motifs"], "mood_adjs": ["youthful", "quirky", "anti-establishment"], "occasions": ["creative brands", "event posters", "retro fashion"]}, {"num": 13, "name": "Bohemian", "description": "Bohemian design embraces artistic freedom and earthy charm. It’s eclectic, globally inspired, and layered with patterns, textiles, and natural elements. In digital spaces, it evokes free-spirited lifestyles and wanderlust.", "tiles": ["tiles/13_Bohemian_1.jpg", "tiles/13_Bohemian_2.jpg", "tiles/13_Bohemian_3.jpg", "tiles/13_Bohemian_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_V5Y7XjLsDoGGRw1-6MBiJw_006.png", "tags": {"era": ["Folk & Vernacular"], "mood": ["Rustic & Handmade"], "elements": [], "usecase": ["Events & Branding"]}, "terms_core": ["rich", "mandalas", "jewel", "ethnic", "script", "organic", "materials"], "terms_feels": ["free", "soulful", "eclectic"], "terms_fits": ["handmade", "travel", "artisanal", "markets"], "core_text": ["rich textures", "mandalas", "jewel tones", "ethnic prints", "script fonts", "organic materials"], "mood_adjs": ["free", "soulful", "eclectic"], "occasions": ["handmade products", "travel brands", "artisanal markets"]}, {"num": 14, "name": "Shabby Chic", "description": "Shabby Chic combines vintage charm with feminine elegance. It often showcases distressed finishes, florals, and pastel tones. The aesthetic is lived-in yet curated, offering soft nostalgia.", "tiles": ["tiles/14_Shabby_Chic_1.jpg", "tiles/14_Shabby_Chic_2.jpg", "tiles/14_Shabby_Chic_3.jpg", "tiles/14_Shabby_Chic_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_BnYQjwg5Cmedw2kf0hGqkA_003.png", "tags": {"era": ["Folk & Vernacular"], "mood": ["Nostalgic & Retro", "Rustic & Handmade"], "elements": ["Texture & Material"], "usecase": ["Fashion & Retail"]}, "terms_core": ["whitewashed", "faded", "florals", "cursive", "lace", "soft", "pinks", "blues"], "terms_feels": ["romantic", "cozy", "nostalgic. common in weddings", "vintage boutiques", "and home decor"], "terms_fits": [], "core_text": ["whitewashed textures", "faded florals", "cursive typography", "lace", "soft pinks and blues"], "mood_adjs": ["romantic", "cozy", "nostalgic. common in weddings", "vintage boutiques", "and home decor"], "occasions": []}, {"num": 15, "name": "Farmhouse / Cottagecore", "description": "Cottagecore is a romanticization of rural life, rooted in simplicity, nature, and slow living. It often uses handmade textures and vintage rural motifs. Farmhouse adds a more rustic, American countryside twist.", "tiles": ["tiles/15_Farmhouse_-_Cottagecore_1.jpg", "tiles/15_Farmhouse_-_Cottagecore_2.jpg", "tiles/15_Farmhouse_-_Cottagecore_3.jpg", "tiles/15_Farmhouse_-_Cottagecore_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_-2PAffHn1ABeGuGwSUiWxA_005.png", "tags": {"era": ["Folk & Vernacular"], "mood": ["Nostalgic & Retro", "Rustic & Handmade"], "elements": ["Texture & Material"], "usecase": ["Events & Branding"]}, "terms_core": ["florals", "gingham", "wood", "antique", "serif", "hand-drawn"], "terms_feels": ["cozy", "nostalgic", "wholesome"], "terms_fits": ["lifestyle", "blogs", "recipe", "rustic", "home"], "core_text": ["florals", "gingham", "wood textures", "antique finishes", "serif or hand-drawn type"], "mood_adjs": ["cozy", "nostalgic", "wholesome"], "occasions": ["lifestyle blogs", "recipe sites", "rustic home brands"]}, {"num": 16, "name": "Victorian", "description": "Victorian design is grand, elaborate, and deeply ornate, stemming from the aesthetics of the 19th-century British monarchy. It reflects wealth, refinement, and a love for detail — often used today for vintage or historical storytelling.", "tiles": ["tiles/16_Victorian_1.jpg", "tiles/16_Victorian_2.jpg", "tiles/16_Victorian_3.jpg", "tiles/16_Victorian_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_hBNX948eYbHpf0gN6ey4vQ_003.png", "tags": {"era": ["Classical & Historical"], "mood": ["Regal & Ornate"], "elements": ["Ornamental & Decorative"], "usecase": ["Luxury & Premium"]}, "terms_core": ["ornate", "serif", "damask", "deep", "reds", "greens", "gilded", "frames", "heavy", "florals"], "terms_feels": ["opulent", "historical", "romantic"], "terms_fits": ["book", "covers", "tea", "vintage", "fashion", "museum", "events"], "core_text": ["ornate serif fonts", "damask patterns", "deep reds and greens", "gilded frames", "heavy florals"], "mood_adjs": ["opulent", "historical", "romantic"], "occasions": ["book covers", "tea brands", "vintage fashion", "museum events"]}, {"num": 17, "name": "Art Deco", "description": "Art Deco is sleek, geometric, and sophisticated, born from the glamour of the 1920s. It combines streamlined modernism with luxurious materials and symmetrical patterns. It’s both nostalgic and aspirational.", "tiles": ["tiles/17_Art_Deco_1.jpg", "tiles/17_Art_Deco_2.jpg", "tiles/17_Art_Deco_3.jpg", "tiles/17_Art_Deco_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_GwFi-NcfsrbDz82gh5rq5A_007.png", "tags": {"era": ["Classical & Historical"], "mood": ["Regal & Ornate"], "elements": ["Geometric & Grid"], "usecase": ["Luxury & Premium"]}, "terms_core": ["gold", "sunbursts", "symmetry", "angular", "rich", "jewel", "sans-serifs", "flair"], "terms_feels": ["glamorous", "upscale", "jazzy"], "terms_fits": ["luxury", "cocktail", "events", "retro-modern"], "core_text": ["gold accents", "sunbursts", "symmetry", "angular shapes", "rich jewel tones", "sans-serifs with flair"], "mood_adjs": ["glamorous", "upscale", "jazzy"], "occasions": ["luxury brands", "cocktail events", "retro-modern interfaces"]}, {"num": 18, "name": "Art Nouveau", "description": "Art Nouveau is nature-inspired, fluid, and highly decorative. It celebrates organic forms — especially floral and botanical — and appears elegant and expressive. Common in poster design and decorative illustration.", "tiles": ["tiles/18_Art_Nouveau_1.jpg", "tiles/18_Art_Nouveau_2.jpg", "tiles/18_Art_Nouveau_3.jpg", "tiles/18_Art_Nouveau_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_Q2WpCgvg4HeFEZC__64C0A.png", "tags": {"era": ["Classical & Historical"], "mood": [], "elements": ["Ornamental & Decorative"], "usecase": ["Editorial & Publishing"]}, "terms_core": ["curving", "floral", "hand-lettered", "earthy", "stained", "glass"], "terms_feels": ["romantic", "poetic", "organic"], "terms_fits": ["artistic", "natural", "cosmetics", "artisan"], "core_text": ["curving lines", "floral motifs", "hand-lettered type", "earthy palettes", "stained glass patterns"], "mood_adjs": ["romantic", "poetic", "organic"], "occasions": ["artistic brands", "natural cosmetics", "artisan packaging"]}, {"num": 19, "name": "Mystical Western", "description": "A fantasy fusion of cowboy westerns and occult mysticism, this style blends desert iconography with celestial symbols. It’s rugged yet spiritual — a trending aesthetic across indie brands and metaphysical themes.", "tiles": ["tiles/19_Mystical_Western_1.jpg", "tiles/19_Mystical_Western_2.jpg", "tiles/19_Mystical_Western_3.jpg", "tiles/19_Mystical_Western_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_lDmez9zOXqINXWB69buokQ_003.png", "tags": {"era": ["Fantasy & Thematic"], "mood": [], "elements": [], "usecase": ["Events & Branding"]}, "terms_core": ["tarot", "symbols", "cacti", "western", "serif", "sun/moon", "earthy", "leather"], "terms_feels": ["mystical", "rugged", "folklore-driven"], "terms_fits": ["crystal", "shops", "tarot", "moody", "music"], "core_text": ["tarot symbols", "cacti", "western serif fonts", "sun/moon motifs", "earthy tones", "leather textures"], "mood_adjs": ["mystical", "rugged", "folklore-driven"], "occasions": ["crystal shops", "tarot apps", "moody music visuals"]}, {"num": 20, "name": "Kitsch", "description": "Kitsch embraces “bad taste” in an ironic, humorous way. It uses exaggerated or sentimental visuals from pop culture, often leaning into over-the-top patterns and saturated palettes.", "tiles": ["tiles/20_Kitsch_1.jpg", "tiles/20_Kitsch_2.jpg", "tiles/20_Kitsch_3.jpg", "tiles/20_Kitsch_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_5FRf7SYTG7qzvxDL87GT5A_005.png", "tags": {"era": ["Modern Experimental"], "mood": ["Bold & Loud", "Playful & Whimsical"], "elements": [], "usecase": ["Fashion & Retail"]}, "terms_core": ["clashing", "outdated", "shiny", "plastic", "retro", "advertising", "excess"], "terms_feels": ["campy", "fun", "ironic"], "terms_fits": ["parody", "gen", "z", "fashion", "nostalgic", "remixes"], "core_text": ["clashing prints", "outdated fonts", "shiny plastic textures", "retro advertising visuals", "excess"], "mood_adjs": ["campy", "fun", "ironic"], "occasions": ["parody work", "gen z fashion", "nostalgic remixes"]}, {"num": 21, "name": "Y2K", "description": "The Y2K aesthetic is inspired by late 1990s and early 2000s tech culture. It mixes cyber-futurism with millennial pop culture — think metallics, gradients, and digital gloss.", "tiles": ["tiles/21_Y2K_1.jpg", "tiles/21_Y2K_2.jpg", "tiles/21_Y2K_3.jpg", "tiles/21_Y2K_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_nJjV1gzAE3QICYjN6pD5aw_003.png", "tags": {"era": ["Digital Age"], "mood": ["Nostalgic & Retro", "Futuristic & Digital"], "elements": ["Gradient & Glow"], "usecase": ["Fashion & Retail"]}, "terms_core": ["chrome", "pixel", "metallic", "iridescent", "gradients", "matrix"], "terms_feels": ["futuristic", "nostalgic", "edgy"], "terms_fits": ["fashion", "tech", "revival", "throwback"], "core_text": ["chrome textures", "pixel fonts", "metallic finishes", "iridescent gradients", "matrix grids"], "mood_adjs": ["futuristic", "nostalgic", "edgy"], "occasions": ["fashion branding", "tech revival themes", "throwback interfaces"]}, {"num": 22, "name": "Bauhaus", "description": "Bauhaus is functional, geometric, and minimal. Rooted in the German design school of the 1920s, it favors “form follows function” and uses basic shapes and primary colors. It’s the birth of modernist design.", "tiles": ["tiles/22_Bauhaus_1.jpg", "tiles/22_Bauhaus_2.jpg", "tiles/22_Bauhaus_3.jpg", "tiles/22_Bauhaus_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_S8Y9XzSmHa5z4s16lCv4-w.png", "tags": {"era": ["Mid-20th Century"], "mood": ["Calm & Minimal"], "elements": ["Geometric & Grid"], "usecase": ["Editorial & Publishing"]}, "terms_core": ["systems", "sans-serif", "red-blue-yellow", "circles/triangles/squares", "minimal", "text"], "terms_feels": ["rational", "structured", "modern"], "terms_fits": ["architecture", "product", "clean", "systems"], "core_text": ["grid systems", "sans-serif fonts", "red-blue-yellow palette", "circles/triangles/squares", "minimal text"], "mood_adjs": ["rational", "structured", "modern"], "occasions": ["architecture", "product design", "clean brand systems"]}, {"num": 23, "name": "Brutalism", "description": "Brutalism in design is raw, bold, and purposefully unrefined. Borrowed from architecture, it rejects polish for stark functionality and visual honesty. In digital, it breaks UI norms to stand out.", "tiles": ["tiles/23_Brutalism_1.jpg", "tiles/23_Brutalism_2.jpg", "tiles/23_Brutalism_3.jpg", "tiles/23_Brutalism_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_qf7OAYNj7D4aOrUKZyrmnA_006.png", "tags": {"era": ["Modern Experimental"], "mood": ["Bold & Loud", "Dark & Mysterious", "Conceptual & Arty"], "elements": ["Heavy Contrast"], "usecase": []}, "terms_core": ["monospaced", "grayscale", "harsh", "edges", "solid", "blocks", "default", "buttons"], "terms_feels": ["bold", "disruptive", "honest"], "terms_fits": ["artist", "portfolios", "experimental", "counterculture"], "core_text": ["monospaced fonts", "grayscale palettes", "harsh edges", "solid blocks", "default buttons"], "mood_adjs": ["bold", "disruptive", "honest"], "occasions": ["artist portfolios", "experimental interfaces", "counterculture brands"]}, {"num": 24, "name": "Cybercore", "description": "Cybercore is a high-tech, hyper-modern style drawing from hacker aesthetics, sci-fi, and the underground internet. It’s visually complex and packed with futuristic iconography.", "tiles": ["tiles/24_Cybercore_1.jpg", "tiles/24_Cybercore_2.jpg", "tiles/24_Cybercore_3.jpg", "tiles/24_Cybercore_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_naW_8-_2BqaIS5GGDSMB3A_004.png", "tags": {"era": ["Digital Age"], "mood": ["Dark & Mysterious", "Futuristic & Digital"], "elements": ["Gradient & Glow"], "usecase": ["Tech & Startup"]}, "terms_core": ["neon", "lights", "glitch", "code", "green/black", "themes", "tech", "symbology"], "terms_feels": ["futuristic", "chaotic", "dystopian"], "terms_fits": ["tech", "events", "hacking", "culture", "gaming"], "core_text": ["neon lights", "glitch effects", "code patterns", "green/black themes", "tech symbology"], "mood_adjs": ["futuristic", "chaotic", "dystopian"], "occasions": ["tech events", "hacking culture", "gaming visuals"]}, {"num": 25, "name": "Synthwave", "description": "Synthwave is a retro-futuristic style inspired by 1980s sci-fi and synth music. It romanticizes a neon-lit future from a past era. Think “Tron” meets “Blade Runner” with a pink-purple glow.", "tiles": ["tiles/25_Synthwave_1.jpg", "tiles/25_Synthwave_2.jpg", "tiles/25_Synthwave_3.jpg", "tiles/25_Synthwave_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_Rj8SqwCD7PXlaBWYfojPPw_007.png", "tags": {"era": ["Digital Age"], "mood": ["Nostalgic & Retro", "Futuristic & Digital"], "elements": ["Gradient & Glow"], "usecase": []}, "terms_core": ["horizons", "vhs", "neon", "gradients", "3d", "chrome", "purple", "cyan"], "terms_feels": ["retro-futuristic", "vibrant", "dreamy"], "terms_fits": ["music", "arcade", "nostalgia"], "core_text": ["grid horizons", "vhs textures", "neon gradients", "3d chrome type", "purple and cyan palettes"], "mood_adjs": ["retro-futuristic", "vibrant", "dreamy"], "occasions": ["music visuals", "arcade interfaces", "nostalgia apps"]}, {"num": 26, "name": "Vaporwave", "description": "Vaporwave is a surreal, satirical style that critiques consumerism while celebrating 80s/90s nostalgia. It mixes classical statues with glitch art, Japanese characters, and retro software interfaces to create dreamlike visuals.", "tiles": ["tiles/26_Vaporwave_1.jpg", "tiles/26_Vaporwave_2.jpg", "tiles/26_Vaporwave_3.jpg", "tiles/26_Vaporwave_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_siu7RvIYDCZK-dPGIahjEA_006.png", "tags": {"era": ["Digital Age"], "mood": ["Nostalgic & Retro", "Futuristic & Digital"], "elements": ["Gradient & Glow"], "usecase": ["Fashion & Retail"]}, "terms_core": ["pastel", "pinks", "purples", "vhs", "glitch", "greek", "busts", "ms", "paint", "japanese", "text", "lo-fi"], "terms_feels": ["ironic", "dreamy", "nostalgic"], "terms_fits": ["indie", "music", "art", "zines", "anti-establishment"], "core_text": ["pastel pinks and purples", "vhs glitch", "greek busts", "ms paint elements", "japanese text", "lo-fi textures"], "mood_adjs": ["ironic", "dreamy", "nostalgic"], "occasions": ["indie music", "visual art zines", "anti-establishment design"]}, {"num": 27, "name": "Pop Art", "description": "Pop Art draws inspiration from mass media, advertising, and comic books. It’s bold, colorful, and meant to grab attention. Originating in the 1950s-60s, it blurs the line between high art and popular culture.", "tiles": ["tiles/27_Pop_Art_1.jpg", "tiles/27_Pop_Art_2.jpg", "tiles/27_Pop_Art_3.jpg", "tiles/27_Pop_Art_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_kWtyTXv40D_YkGG_NDtqug_004.png", "tags": {"era": ["Mid-20th Century"], "mood": ["Bold & Loud", "Nostalgic & Retro", "Playful & Whimsical"], "elements": ["Heavy Contrast"], "usecase": []}, "terms_core": ["ben-day", "dots", "bold", "outlines", "primary", "comic", "sans", "display", "speech", "bubbles"], "terms_feels": ["loud", "fun", "energetic"], "terms_fits": ["pop", "culture", "campaigns", "retail", "fashion"], "core_text": ["ben-day dots", "bold outlines", "primary colors", "comic sans or display fonts", "speech bubbles"], "mood_adjs": ["loud", "fun", "energetic"], "occasions": ["pop culture campaigns", "retail packaging", "fashion visuals"]}, {"num": 28, "name": "Bento Box", "description": "Bento UI is a trend in interface design that presents content in neatly organized, block-like sections — like compartments in a bento box. It makes complex layouts feel digestible and modern.", "tiles": ["tiles/28_Bento_Box_1.jpg", "tiles/28_Bento_Box_2.jpg", "tiles/28_Bento_Box_3.jpg", "tiles/28_Bento_Box_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_kbKkWXndZp0p1hNfey1zcQ_003.png", "tags": {"era": ["Digital Age"], "mood": [], "elements": ["Typography-driven", "Geometric & Grid"], "usecase": ["Tech & Startup"]}, "terms_core": ["rounded", "modular", "blocks", "subtle", "shadows", "icons", "labels", "micro-animations", "neutral"], "terms_feels": ["organized", "friendly", "clean"], "terms_fits": ["dashboards", "portfolios", "productivity", "tools"], "core_text": ["rounded modular blocks", "subtle shadows", "icons with labels", "micro-animations", "neutral palettes"], "mood_adjs": ["organized", "friendly", "clean"], "occasions": ["dashboards", "portfolios", "productivity tools"]}, {"num": 29, "name": "Graffiti", "description": "Graffiti design is rebellious, raw, and rooted in street culture. It’s loud and expressive, often using urban textures and hand-painted type. It conveys energy and social voice.", "tiles": ["tiles/29_Graffiti_1.jpg", "tiles/29_Graffiti_2.jpg", "tiles/29_Graffiti_3.jpg", "tiles/29_Graffiti_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_LZCZ0juJHhhURNHKPddlrg_003.png", "tags": {"era": ["Modern Experimental"], "mood": ["Bold & Loud"], "elements": ["Illustrative & Hand-drawn"], "usecase": ["Fashion & Retail"]}, "terms_core": ["spray", "paint", "dripping", "letters", "concrete", "neon", "freestyle"], "terms_feels": ["urban", "defiant", "expressive"], "terms_fits": ["streetwear", "music", "festivals", "youth-centric", "campaigns"], "core_text": ["spray paint textures", "dripping letters", "concrete backgrounds", "neon colors", "freestyle typography"], "mood_adjs": ["urban", "defiant", "expressive"], "occasions": ["streetwear brands", "music festivals", "youth-centric campaigns"]}, {"num": 30, "name": "Tenebrism", "description": "Tenebrism is a painting technique that uses dramatic lighting and intense contrasts between light and dark. In visual design, it creates depth, drama, and emotional weight.", "tiles": ["tiles/30_Tenebrism_1.jpg", "tiles/30_Tenebrism_2.jpg", "tiles/30_Tenebrism_3.jpg", "tiles/30_Tenebrism_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_KWvAy2WB2doKlF1m7wLBbQ_002.png", "tags": {"era": ["Classical & Historical"], "mood": ["Dark & Mysterious"], "elements": ["Heavy Contrast"], "usecase": []}, "terms_core": ["high", "contrast", "chiaroscuro", "black", "spotlighting", "oil"], "terms_feels": ["intense", "emotional", "moody"], "terms_fits": ["gothic", "art", "storytelling", "cinematic", "posters"], "core_text": ["high contrast chiaroscuro", "black backgrounds", "spotlighting", "oil textures"], "mood_adjs": ["intense", "emotional", "moody"], "occasions": ["gothic art", "storytelling visuals", "cinematic posters"]}, {"num": 31, "name": "Gothic", "description": "Gothic design is rooted in medieval architecture and dark romanticism. It’s characterized by pointed arches, dark color palettes, and ornate lettering. It evokes mystery and spiritual depth.", "tiles": ["tiles/31_Gothic_1.jpg", "tiles/31_Gothic_2.jpg", "tiles/31_Gothic_3.jpg", "tiles/31_Gothic_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_GO74m3-RY53ZZ8BgGzSgPg_004.png", "tags": {"era": ["Classical & Historical"], "mood": ["Regal & Ornate", "Dark & Mysterious"], "elements": ["Heavy Contrast"], "usecase": ["Fashion & Retail"]}, "terms_core": ["blackletter", "stained", "glass", "stone", "deep", "purples", "blacks"], "terms_feels": ["dark", "dramatic", "historic"], "terms_fits": ["fantasy", "book", "covers", "music", "posters", "alternative", "fashion"], "core_text": ["blackletter fonts", "stained glass textures", "stone motifs", "deep purples and blacks"], "mood_adjs": ["dark", "dramatic", "historic"], "occasions": ["fantasy book covers", "music posters", "alternative fashion"]}, {"num": 32, "name": "Pointillism", "description": "Pointillism is a painting technique using small dots of color to form an image. In design, it brings texture, detail, and a sense of movement or grain.", "tiles": ["tiles/32_Pointillism_1.jpg", "tiles/32_Pointillism_2.jpg", "tiles/32_Pointillism_3.jpg", "tiles/32_Pointillism_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_RVOqP4oRboZkcDzxbpwb2g_004.png", "tags": {"era": ["Classical & Historical"], "mood": ["Conceptual & Arty"], "elements": ["Illustrative & Hand-drawn"], "usecase": []}, "terms_core": ["dot", "clusters", "optical", "mixing", "pastel", "impressionist", "fade", "transitions"], "terms_feels": ["artistic", "textured", "tranquil"], "terms_fits": ["fine", "art", "creative", "editorials", "educational", "content"], "core_text": ["dot clusters", "optical mixing", "pastel or impressionist palettes", "fade transitions"], "mood_adjs": ["artistic", "textured", "tranquil"], "occasions": ["fine art branding", "creative editorials", "educational content"]}, {"num": 33, "name": "Mixed Media", "description": "Mixed Media blends multiple visual styles and techniques — photography, illustration, textures — into one cohesive piece. It adds layers and depth, often evoking experimental or tactile storytelling.", "tiles": ["tiles/33_Mixed_Media_1.jpg", "tiles/33_Mixed_Media_2.jpg", "tiles/33_Mixed_Media_3.jpg", "tiles/33_Mixed_Media_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_YnsCRlK6L-pnRW56ulhDoA_002.png", "tags": {"era": ["Modern Experimental"], "mood": ["Rustic & Handmade", "Conceptual & Arty"], "elements": ["Texture & Material", "Illustrative & Hand-drawn"], "usecase": []}, "terms_core": ["cutouts", "overlays", "analog", "digital", "collage", "hand-drawn", "photo", "paper"], "terms_feels": ["eclectic", "expressive", "avant-garde"], "terms_fits": ["magazines", "experimental", "art", "education"], "core_text": ["cutouts", "overlays", "analog + digital collage", "hand-drawn + photo elements", "paper textures"], "mood_adjs": ["eclectic", "expressive", "avant-garde"], "occasions": ["magazines", "experimental branding", "art education"]}, {"num": 34, "name": "Steampunk", "description": "Steampunk fuses Victorian aesthetics with industrial-age machinery and sci-fi fantasy. It celebrates retro-futurism, with gears, brass, and corsets — all stylized in a mechanical world.", "tiles": ["tiles/34_Steampunk_1.jpg", "tiles/34_Steampunk_2.jpg", "tiles/34_Steampunk_3.jpg", "tiles/34_Steampunk_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_SGCmdHD416ZInzUq2QKXxw_002.png", "tags": {"era": ["Fantasy & Thematic"], "mood": [], "elements": ["Texture & Material"], "usecase": ["Events & Branding"]}, "terms_core": ["copper", "cogwheels", "leather", "top", "hats", "serif", "steam", "smoke"], "terms_feels": ["adventurous", "vintage-futuristic", "imaginative"], "terms_fits": ["games", "books", "cosplay-related"], "core_text": ["copper tones", "cogwheels", "leather", "top hats", "serif type", "steam and smoke motifs"], "mood_adjs": ["adventurous", "vintage-futuristic", "imaginative"], "occasions": ["games", "books", "cosplay-related visuals"]}, {"num": 35, "name": "Kawaii", "description": "Kawaii is the Japanese culture of cuteness. It’s childlike, cheerful, and full of charm. Designs often feature adorable characters with simple features, soft colors, and positive vibes.", "tiles": ["tiles/35_Kawaii_1.jpg", "tiles/35_Kawaii_2.jpg", "tiles/35_Kawaii_3.jpg", "tiles/35_Kawaii_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_fuMP65hHlwRzPKdP9b0IuA_004.png", "tags": {"era": ["East Asian"], "mood": ["Playful & Whimsical"], "elements": ["Illustrative & Hand-drawn", "Ornamental & Decorative"], "usecase": ["Fashion & Retail", "Kids & Family"]}, "terms_core": ["pastel", "rounded", "icons", "baby", "faces", "blushing", "cheeks", "handwritten"], "terms_feels": ["sweet", "innocent", "joyful"], "terms_fits": ["stationery", "kids", "whimsical"], "core_text": ["pastel colors", "rounded icons", "baby faces", "blushing cheeks", "handwritten type"], "mood_adjs": ["sweet", "innocent", "joyful"], "occasions": ["stationery", "kids’ products", "whimsical branding"]}, {"num": 36, "name": "Coquette", "description": "Coquette design is ultra-feminine and flirty with vintage undertones. It draws from early 2000s romantic aesthetics — think lace, bows, soft filters, and love letters.", "tiles": ["tiles/36_Coquette_1.jpg", "tiles/36_Coquette_2.jpg", "tiles/36_Coquette_3.jpg", "tiles/36_Coquette_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_5eKIhEOwj9dW9Mw1dWGkJw_004.png", "tags": {"era": ["Fantasy & Thematic"], "mood": ["Dreamy & Ethereal", "Playful & Whimsical"], "elements": ["Ornamental & Decorative"], "usecase": ["Fashion & Retail"]}, "terms_core": ["baby", "pinks", "pearls", "ribbon", "dainty", "serif", "heart"], "terms_feels": ["delicate", "girly", "nostalgic"], "terms_fits": ["beauty", "fashion", "reels", "romantic", "lifestyle", "blogs"], "core_text": ["baby pinks", "pearls", "ribbon motifs", "dainty serif fonts", "heart shapes"], "mood_adjs": ["delicate", "girly", "nostalgic"], "occasions": ["beauty brands", "fashion reels", "romantic lifestyle blogs"]}, {"num": 37, "name": "Surrealism", "description": "Surrealism breaks the boundaries of logic and realism. It thrives on dreamlike juxtapositions, abstract logic, and fantastical elements that challenge the viewer’s sense of reality.", "tiles": ["tiles/37_Surrealism_1.jpg", "tiles/37_Surrealism_2.jpg", "tiles/37_Surrealism_3.jpg", "tiles/37_Surrealism_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_pqgyDSiJ1BX7DzIUWiyzkg_002.png", "tags": {"era": ["Modern Experimental"], "mood": ["Conceptual & Arty"], "elements": ["Illustrative & Hand-drawn"], "usecase": []}, "terms_core": ["collage", "disjointed", "objects", "melting", "metaphors", "unexpected", "scale"], "terms_feels": ["dreamy", "unsettling", "thought-provoking"], "terms_fits": ["concept", "art", "experimental", "literary"], "core_text": ["collage", "disjointed objects", "melting forms", "metaphors", "unexpected scale"], "mood_adjs": ["dreamy", "unsettling", "thought-provoking"], "occasions": ["concept art", "experimental visuals", "literary design"]}, {"num": 38, "name": "Utilitarian", "description": "Utilitarian design is function-first, clean, and direct. It prioritizes clarity over aesthetics and often has a rugged, military-industrial feel.", "tiles": ["tiles/38_Utilitarian_1.jpg", "tiles/38_Utilitarian_2.jpg", "tiles/38_Utilitarian_3.jpg", "tiles/38_Utilitarian_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_HNjciQGEQdfkA1WP5a6iHw.png", "tags": {"era": ["Modern Experimental"], "mood": ["Calm & Minimal"], "elements": ["Geometric & Grid"], "usecase": ["Tech & Startup"]}, "terms_core": ["grid", "monospaced", "industrial", "muted", "absence", "decoration"], "terms_feels": ["practical", "minimal", "efficient. used in manuals", "signage", "utility apps", "and technical interfaces"], "terms_fits": [], "core_text": ["grid layout", "monospaced or industrial fonts", "muted tones", "absence of decoration"], "mood_adjs": ["practical", "minimal", "efficient. used in manuals", "signage", "utility apps", "and technical interfaces"], "occasions": []}, {"num": 39, "name": "Mid-Century", "description": "Mid- Century design is inspired by the 1940s–60s, emphasizing form, function, and organic simplicity. It blends bold geometry with warm textures and modern optimism.", "tiles": ["tiles/39_Mid-Century_1.jpg", "tiles/39_Mid-Century_2.jpg", "tiles/39_Mid-Century_3.jpg", "tiles/39_Mid-Century_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_e4ZxrtMLMzB_RzrlBlY3kA.png", "tags": {"era": ["Mid-20th Century"], "mood": ["Calm & Minimal", "Nostalgic & Retro"], "elements": ["Geometric & Grid"], "usecase": ["Editorial & Publishing"]}, "terms_core": ["clean", "retro", "boomerangs", "mod", "sans-serif"], "terms_feels": ["nostalgic", "modernist", "optimistic"], "terms_fits": ["furniture", "lifestyle", "blogs", "editorial"], "core_text": ["clean lines", "retro colors", "boomerangs", "mod patterns", "sans-serif fonts"], "mood_adjs": ["nostalgic", "modernist", "optimistic"], "occasions": ["furniture branding", "lifestyle blogs", "editorial layouts"]}, {"num": 40, "name": "Scrapbook", "description": "Scrapbook design mimics the handmade feel of collaging memories. It’s personal, layered, and nostalgic, using tape, torn edges, and handwritten notes.", "tiles": ["tiles/40_Scrapbook_1.jpg", "tiles/40_Scrapbook_2.jpg", "tiles/40_Scrapbook_3.jpg", "tiles/40_Scrapbook_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_t0QFQdSUtYxARSJYsxXA2Q_002.png", "tags": {"era": ["Folk & Vernacular"], "mood": ["Nostalgic & Retro", "Rustic & Handmade"], "elements": ["Texture & Material", "Illustrative & Hand-drawn"], "usecase": ["Kids & Family"]}, "terms_core": ["paper", "washi", "tape", "polaroid", "frames", "hand", "lettering", "stickers"], "terms_feels": ["sentimental", "warm", "nostalgic"], "terms_fits": ["journaling", "memory", "school"], "core_text": ["paper textures", "washi tape", "polaroid frames", "hand lettering", "stickers"], "mood_adjs": ["sentimental", "warm", "nostalgic"], "occasions": ["journaling apps", "memory branding", "school projects"]}, {"num": 41, "name": "Neo Frutiger Aero", "description": "This is a Y2K revival sub-style mixing glossy UI elements, rounded sans-serifs like Frutiger, and bubble-like gradients. It’s clean, futuristic, and retro at once.", "tiles": ["tiles/41_Neo_Frutiger_Aero_1.jpg", "tiles/41_Neo_Frutiger_Aero_2.jpg", "tiles/41_Neo_Frutiger_Aero_3.jpg", "tiles/41_Neo_Frutiger_Aero_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_zMwb_Ko4Cm-epVrG5pCYlQ.png", "tags": {"era": ["Digital Age"], "mood": ["Dreamy & Ethereal", "Futuristic & Digital"], "elements": ["Gradient & Glow"], "usecase": ["Tech & Startup"]}, "terms_core": ["aqua", "blues", "semi-transparent", "bubbles", "gloss", "friendly", "icons", "rounded", "ui"], "terms_feels": ["futuristic", "nostalgic", "clean"], "terms_fits": ["tech", "playful", "fintech", "web3"], "core_text": ["aqua blues", "semi-transparent bubbles", "gloss overlays", "friendly icons", "rounded ui"], "mood_adjs": ["futuristic", "nostalgic", "clean"], "occasions": ["tech", "playful fintech", "web3 brands"]}, {"num": 42, "name": "Dark Magic Academia", "description": "This style blends gothic academia with mysticism — like Harry Potter meets occult. It’s dark, intellectual, and full of symbolism.", "tiles": ["tiles/42_Dark_Magic_Academia_1.jpg", "tiles/42_Dark_Magic_Academia_2.jpg", "tiles/42_Dark_Magic_Academia_3.jpg", "tiles/42_Dark_Magic_Academia_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_L6K3gpPQTOZfA5dMF0yEwQ_004.png", "tags": {"era": ["Fantasy & Thematic"], "mood": ["Dark & Mysterious"], "elements": [], "usecase": ["Events & Branding"]}, "terms_core": ["candles", "spellbooks", "antique", "etchings", "black/gold", "serif", "calligraphy"], "terms_feels": ["mysterious", "scholarly", "magical"], "terms_fits": ["fantasy", "games", "book", "clubs", "witchy"], "core_text": ["candles", "spellbooks", "antique etchings", "black/gold palette", "serif calligraphy"], "mood_adjs": ["mysterious", "scholarly", "magical"], "occasions": ["fantasy games", "book clubs", "witchy brands"]}, {"num": 43, "name": "Light Academia", "description": "Light Academia is soft, poetic, and classical. It’s like walking through a European library in summer. It romanticizes knowledge, literature, and aesthetics.", "tiles": ["tiles/43_Light_Academia_1.jpg", "tiles/43_Light_Academia_2.jpg", "tiles/43_Light_Academia_3.jpg", "tiles/43_Light_Academia_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_jNHM6js6YXamgCIXiGudCA_004.png", "tags": {"era": ["Fantasy & Thematic"], "mood": ["Dreamy & Ethereal"], "elements": [], "usecase": ["Wellness & Spiritual", "Editorial & Publishing"]}, "terms_core": ["creamy", "neutrals", "serif", "books", "sunlight", "linen"], "terms_feels": ["scholarly", "calm", "refined. works for journals", "study apps", "or aesthetic fashion"], "terms_fits": [], "core_text": ["creamy neutrals", "serif fonts", "books", "sunlight", "linen textures"], "mood_adjs": ["scholarly", "calm", "refined. works for journals", "study apps", "or aesthetic fashion"], "occasions": []}, {"num": 44, "name": "Wabi Sabi", "description": "Wabi Sabi is a Japanese philosophy of embracing imperfection and impermanence. It values natural textures, asymmetry, and subtle beauty.", "tiles": ["tiles/44_Wabi_Sabi_1.jpg", "tiles/44_Wabi_Sabi_2.jpg", "tiles/44_Wabi_Sabi_3.jpg", "tiles/44_Wabi_Sabi_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_5jift7Opn3NWJ56KI176bw_007.png", "tags": {"era": ["East Asian"], "mood": ["Dreamy & Ethereal", "Calm & Minimal", "Rustic & Handmade"], "elements": ["Texture & Material"], "usecase": ["Wellness & Spiritual"]}, "terms_core": ["earthy", "rough", "pottery", "natural", "organic", "minimal", "sans-serif"], "terms_feels": ["humble", "calm", "contemplative"], "terms_fits": ["wellness", "tea", "mindful"], "core_text": ["earthy tones", "rough pottery textures", "natural light", "organic forms", "minimal sans-serif"], "mood_adjs": ["humble", "calm", "contemplative"], "occasions": ["wellness brands", "tea packaging", "mindful interfaces"]}, {"num": 45, "name": "South West / Wild West", "description": "This style captures American desert landscapes, cowboy culture, and Native American influences. It’s warm, rugged, and rooted in heritage.", "tiles": ["tiles/45_South_West_-_Wild_West_1.jpg", "tiles/45_South_West_-_Wild_West_2.jpg", "tiles/45_South_West_-_Wild_West_3.jpg", "tiles/45_South_West_-_Wild_West_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_BMyN7Ev6v8q4Xyn8p_kmWQ_002.png", "tags": {"era": ["Folk & Vernacular"], "mood": ["Rustic & Handmade"], "elements": [], "usecase": ["Events & Branding"]}, "terms_core": ["terracotta", "cacti", "denim", "cowboy", "boots", "serif", "western"], "terms_feels": ["rugged", "adventurous", "nostalgic"], "terms_fits": ["ranch", "outdoor", "gear", "festival", "posters"], "core_text": ["terracotta", "cacti", "denim textures", "cowboy boots", "serif western fonts"], "mood_adjs": ["rugged", "adventurous", "nostalgic"], "occasions": ["ranch brands", "outdoor gear", "festival posters"]}, {"num": 46, "name": "Nautical", "description": "Nautical design is inspired by sea life, ships, and coastal living. It’s fresh and orderly, with classic maritime elements and a palette drawn from ocean and sand.", "tiles": ["tiles/46_Nautical_1.jpg", "tiles/46_Nautical_2.jpg", "tiles/46_Nautical_3.jpg", "tiles/46_Nautical_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_Gh5cuIGOTQTfPtfSqvtedg.png", "tags": {"era": ["Folk & Vernacular"], "mood": ["Rustic & Handmade"], "elements": [], "usecase": ["Events & Branding"]}, "terms_core": ["navy", "white", "anchors", "ropes", "stripes", "brass", "serif", "stencil"], "terms_feels": ["fresh", "structured", "maritime"], "terms_fits": ["seafood", "beach", "resorts", "summer", "campaigns"], "core_text": ["navy and white", "anchors", "ropes", "stripes", "brass", "serif or stencil fonts"], "mood_adjs": ["fresh", "structured", "maritime"], "occasions": ["seafood brands", "beach resorts", "summer campaigns"]}, {"num": 47, "name": "Rebus", "description": "Rebus design communicates through symbols or images representing sounds or words. It’s clever and interactive, often used for puzzles or branding.", "tiles": ["tiles/47_Rebus_1.jpg", "tiles/47_Rebus_2.jpg", "tiles/47_Rebus_3.jpg", "tiles/47_Rebus_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_Ar__xwhpZR9cabxsHQgb7Q_002.png", "tags": {"era": ["Modern Experimental"], "mood": ["Conceptual & Arty"], "elements": ["Typography-driven"], "usecase": []}, "terms_core": ["pictograms", "puns", "image-type", "hybrids", "clean"], "terms_feels": ["witty", "playful", "intellectual. works"], "terms_fits": ["educational", "puzzles", "storytelling"], "core_text": ["pictograms", "visual puns", "image-type hybrids", "clean layouts"], "mood_adjs": ["witty", "playful", "intellectual. works"], "occasions": ["educational design", "puzzles", "brand storytelling"]}, {"num": 48, "name": "Glassmorphism", "description": "Glassmorphism gives UI elements a frosted glass look — transparent with blur and depth. It’s soft, futuristic, and layered.", "tiles": ["tiles/48_Glassmorphism_1.jpg", "tiles/48_Glassmorphism_2.jpg", "tiles/48_Glassmorphism_3.jpg", "tiles/48_Glassmorphism_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_yLvPd28mq2bTq551wEzvdQ.png", "tags": {"era": ["Digital Age"], "mood": ["Futuristic & Digital"], "elements": ["Gradient & Glow"], "usecase": ["Tech & Startup"]}, "terms_core": ["frosted", "blur", "semi-transparency", "soft", "shadows", "neon", "tints"], "terms_feels": ["futuristic", "elegant", "sleek. common in apps", "os ui", "or product landing pages"], "terms_fits": [], "core_text": ["frosted backgrounds", "blur effects", "semi-transparency", "soft shadows", "neon tints"], "mood_adjs": ["futuristic", "elegant", "sleek. common in apps", "os ui", "or product landing pages"], "occasions": []}, {"num": 49, "name": "Modular Typography", "description": "This style breaks type into grids or building blocks. It allows flexible systems and unique visual rhythm, often experimental in nature.", "tiles": ["tiles/49_Modular_Typography_1.jpg", "tiles/49_Modular_Typography_2.jpg", "tiles/49_Modular_Typography_3.jpg", "tiles/49_Modular_Typography_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_e8QZt5jnLuRh6EvOy2bBLA_003.png", "tags": {"era": ["Modern Experimental"], "mood": ["Bold & Loud", "Conceptual & Arty"], "elements": ["Typography-driven", "Geometric & Grid"], "usecase": ["Editorial & Publishing"]}, "terms_core": ["geometric", "letterforms", "typographic", "uniform", "spacing", "variable"], "terms_feels": ["structural", "modern", "playful. works for posters", "branding systems", "and experimental typography"], "terms_fits": [], "core_text": ["geometric letterforms", "typographic grids", "uniform spacing", "variable layouts"], "mood_adjs": ["structural", "modern", "playful. works for posters", "branding systems", "and experimental typography"], "occasions": []}, {"num": 50, "name": "Neo-Brutalism", "description": "A cleaner, more structured evolution of classic Brutalism. It retains raw honesty but adds better UI practices — useful in digital products that want to be bold yet functional.", "tiles": ["tiles/50_Neo-Brutalism_1.jpg", "tiles/50_Neo-Brutalism_2.jpg", "tiles/50_Neo-Brutalism_3.jpg", "tiles/50_Neo-Brutalism_4.jpg"], "panels": 4, "composite": "50%20Design%20Styles%20Every%20Designer%20Should%20Know%20for%20Better%20Prompting%20_%20by%20Himanshu%20Bhardwaj%20_%20UX%20Planet_files/1_dXI6DY9uQYnYrYah1goQZQ_004.png", "tags": {"era": ["Modern Experimental"], "mood": ["Bold & Loud"], "elements": ["Heavy Contrast"], "usecase": []}, "terms_core": ["bold", "large", "stark", "minimal", "ui", "components", "purposeful", "asymmetry"], "terms_feels": ["confident", "bold", "raw-yet-usable"], "terms_fits": ["portfolios", "creative", "agency", "digital", "magazines", "how", "i", "use", "this", "list", "ai", "prompt", "smarter", "now", "start", "my", "style", "name", "like", "ethereal", "ui", "neo-brutalist", "web", "instantly", "narrows", "its", "aesthetic", "mix", "styles", "pro", "once", "you", "know", "dna", "each", "can", "create", "hybrids", "vaporwave", "x", "gothic", "luxury", "typography", "meets", "aurora", "build", "moodboards", "faster", "if", "want", "show", "client", "options", "just", "generate", "34", "same", "concept", "clarity", "decision", "brief", "teams", "effectively", "whether", "motion", "designers", "frontend", "devs", "saying", "make", "it", "feel", "art", "nouveau", "kawaii", "gets", "your", "message", "across", "way", "than", "trying", "describe", "vibe", "wrapping", "up", "today", "arent", "creators", "were", "increasingly", "becoming", "architects", "translators", "conductors", "world", "where", "ideas", "are", "abundant", "but", "execution", "is", "ai-dependent", "power", "lies", "clearly", "speak", "language", "having", "rich", "vocabulary", "not", "only", "allows", "also", "empowers", "yo", "move", "beyond", "trends", "apply", "intentionally", "so", "next", "time", "stuck", "while", "prompting", "presenting", "direction", "try", "using", "will", "listen", "understand", "thanks", "reading", "case", "study", "till", "end", "liked", "then", "do", "give", "clap", "article", "save", "guide", "share", "team/friends", "let", "inspire", "would", "be", "glad", "connect", "on", "linkedin", "attaching", "profile", "link", "here", "himanshu", "bhardwaj"], "core_text": ["bold colors", "large type", "stark layouts", "minimal ui components", "purposeful asymmetry"], "mood_adjs": ["confident", "bold", "raw-yet-usable"], "occasions": ["design portfolios", "creative agency sites", "digital magazines. how i use this list with ai prompt smarter: i now start my ai prompt with a style name", "like “ethereal ui design”", "“neo-brutalist web layout.” the ai instantly narrows its aesthetic. mix styles like a pro: once you know the dna of each style", "you can create hybrids like “vaporwave x gothic”", "“luxury typography meets aurora.” build moodboards faster: if i want to show a client options", "i just generate 3–4 styles for the same concept. visual clarity = decision clarity. brief teams effectively: whether it’s motion designers", "frontend devs", "saying “make it feel like art nouveau meets kawaii” gets your message across way faster than trying to describe a vibe. wrapping up designers today aren’t just creators", "we’re increasingly becoming prompt architects", "visual translators", "style conductors . in a world where ideas are abundant but execution is ai-dependent", "your power lies in how clearly you speak the language of design. having a rich visual vocabulary not only allows you to prompt effectively but it also empowers yo to move beyond trends", "apply style intentionally. so next time you feel stuck while prompting", "presenting a visual direction try using a style. the ai will listen. the client will understand. and your work will show it. thanks for reading the case study till the end. if you liked it then do give a clap 👏👏 to this article. save this guide", "share it with your design team/friends", "let it inspire your next visual direction. i would be glad to connect with you on linkedin — attaching my linkedin profile link here 👉 himanshu bhardwaj"]}]}</script>
+<script>
+const DATA = JSON.parse(document.getElementById('data').textContent);
+const STYLES = DATA.styles;
+const GROUPS = DATA.groups;
+const LABELS = DATA.group_labels;
+const TDIMS = DATA.token_dims;
+const TFULL = DATA.token_full;
+const INITIAL_ROW_LIMIT = 14;
+
+const CURATED_DIMS = ['era','mood','elements','usecase'];
+const TOKEN_DIMS = ['core_terms','feels','fits'];
+const ALL_DIMS = [...CURATED_DIMS, ...TOKEN_DIMS];
+
+const DIM_HINTS = {
+  era:'periods & movements',
+  mood:'emotional register',
+  elements:'visual building blocks',
+  usecase:'where it shines',
+  core_terms:'specific motifs & materials',
+  feels:'adjectives the article uses',
+  fits:'contexts it suits',
+};
+
+const active = {}; ALL_DIMS.forEach(d=>active[d]=new Set());
+
+/* ---------- Render filter panel ---------- */
+const panelInner = document.getElementById('panelInner');
+function renderFilterPanel(){
+  panelInner.innerHTML = '';
+  // Curated dims
+  CURATED_DIMS.forEach(dim=>{
+    const row = document.createElement('div');
+    row.className='filter-row'; row.dataset.dim = dim;
+    row.innerHTML = `<div class="filter-label"><div class="name">${LABELS[dim]}</div><div class="hint">${DIM_HINTS[dim]}</div></div><div class="chips"></div>`;
+    panelInner.appendChild(row);
+    const box = row.querySelector('.chips');
+    const items = Object.entries(GROUPS[dim])
+      .sort((a,b)=>b[1].length-a[1].length)
+      .map(([tag, members])=>({tag, count: members.length}));
+    renderChips(box, dim, items);
+  });
+  // Token dims
+  TOKEN_DIMS.forEach(dim=>{
+    const row = document.createElement('div');
+    row.className='filter-row'; row.dataset.dim = dim;
+    row.innerHTML = `<div class="filter-label"><div class="name">${TDIMS[dim].label}</div><div class="hint">${DIM_HINTS[dim]}</div></div><div class="chips"></div>`;
+    panelInner.appendChild(row);
+    const box = row.querySelector('.chips');
+    const items = TDIMS[dim].items.map(([tag,count])=>({tag, count}));
+    renderChips(box, dim, items);
+  });
+}
+function renderChips(box, dim, items){
+  const row = box.closest('.filter-row');
+  items.forEach((it,i)=>{
+    const chip = document.createElement('button');
+    chip.className='chip';
+    chip.dataset.dim = dim; chip.dataset.tag = it.tag;
+    if(i>=INITIAL_ROW_LIMIT) chip.classList.add('over-limit');
+    chip.innerHTML=`<span>${it.tag}</span><span class="cnt">${it.count}</span>`;
+    chip.addEventListener('click',()=>toggleTag(dim, it.tag, chip));
+    box.appendChild(chip);
+  });
+  if(items.length > INITIAL_ROW_LIMIT){
+    const extra = items.length - INITIAL_ROW_LIMIT;
+    const btn = document.createElement('button');
+    btn.className='show-more';
+    btn.type='button';
+    btn.setAttribute('aria-expanded','false');
+    btn.textContent=`+ ${extra} more`;
+    btn.addEventListener('click',()=>{
+      const expanded = row.classList.toggle('expanded');
+      btn.setAttribute('aria-expanded', String(expanded));
+      btn.textContent = expanded ? `– show fewer` : `+ ${extra} more`;
+    });
+    box.appendChild(btn);
+  }
+}
+renderFilterPanel();
+
+/* ---------- Filter toggle ---------- */
+const toggleBtn = document.getElementById('toggle');
+const panel = document.getElementById('panel');
+toggleBtn.addEventListener('click',()=>{
+  const open = !panel.classList.contains('collapsed');
+  panel.classList.toggle('collapsed', open);
+  toggleBtn.classList.toggle('open', !open);
+  toggleBtn.setAttribute('aria-expanded', String(!open));
+});
+
+/* ---------- Search over chips ---------- */
+const searchEl = document.getElementById('search');
+const searchClear = document.getElementById('searchclear');
+searchEl.addEventListener('input',()=>{
+  const q = searchEl.value.trim().toLowerCase();
+  searchClear.classList.toggle('show', q.length>0);
+  document.querySelectorAll('.filter-row').forEach(row=>{
+    let any = false;
+    row.querySelectorAll('.chip').forEach(c=>{
+      const tag = c.dataset.tag.toLowerCase();
+      const matches = !q || tag.includes(q);
+      // search-hide overrides over-limit so all matching chips become visible
+      c.classList.toggle('search-hide', !matches);
+      if(matches) any = true;
+    });
+    // Hide row entirely if no match
+    row.style.display = (q && !any) ? 'none' : '';
+    // While searching, force-expand the row so over-limit matches become visible,
+    // and hide the show-more button (search already shows everything that matches).
+    // When search is cleared, restore expand state based on the show-more button's own state.
+    const sm = row.querySelector('.show-more');
+    if(q){
+      row.classList.add('expanded');
+    } else if(sm){
+      const userExpanded = sm.getAttribute('aria-expanded') === 'true';
+      row.classList.toggle('expanded', userExpanded);
+    }
+    if(sm) sm.classList.toggle('is-hidden', !!q);
+  });
+  // If user searches with filter panel collapsed, auto-open it
+  if(q && panel.classList.contains('collapsed')){ toggleBtn.click(); }
+});
+searchClear.addEventListener('click',()=>{ searchEl.value=''; searchEl.dispatchEvent(new Event('input')); searchEl.focus(); });
+
+/* ---------- Core filter logic ---------- */
+function matches(style){
+  for(const dim of ALL_DIMS){
+    const sel = active[dim];
+    if(sel.size===0) continue;
+    const terms = getStyleTerms(style, dim);
+    const ok = [...sel].some(t=>terms.includes(t));
+    if(!ok) return false;
+  }
+  return true;
+}
+function getStyleTerms(style, dim){
+  if(dim==='era'||dim==='mood'||dim==='elements'||dim==='usecase') return style.tags[dim]||[];
+  if(dim==='core_terms') return style.terms_core||[];
+  if(dim==='feels')      return style.terms_feels||[];
+  if(dim==='fits')       return style.terms_fits||[];
+  return [];
+}
+function toggleTag(dim, tag, chipEl){
+  if(active[dim].has(tag)){ active[dim].delete(tag); chipEl&&chipEl.classList.remove('active'); }
+  else{ active[dim].add(tag); chipEl&&chipEl.classList.add('active'); }
+  applyFilters();
+}
+function clearAll(){
+  ALL_DIMS.forEach(d=>active[d].clear());
+  document.querySelectorAll('.chip.active').forEach(c=>c.classList.remove('active'));
+  applyFilters();
+}
+document.getElementById('clearall').addEventListener('click', clearAll);
+
+/* ---------- Grid ---------- */
+const gridEl = document.getElementById('grid');
+STYLES.forEach(s=>{
+  const card = document.createElement('article');
+  card.className='card'; card.dataset.num = s.num;
+  card.tabIndex = 0; card.setAttribute('role','button'); card.setAttribute('aria-label', `${s.name} — open details`);
+  const preview = [...s.tags.mood, ...s.tags.era].slice(0,2);
+  card.innerHTML = `
+    <div class="thumb" style="background-image:url('${encodeURI(s.tiles[0])}')"><span class="num">${String(s.num).padStart(2,'0')}</span></div>
+    <div class="body">
+      <h3>${s.name}</h3>
+      <div class="mini-tags">${preview.map(t=>`<span class="mini-tag">${t}</span>`).join('')}</div>
+    </div>`;
+  card.addEventListener('click',()=>openStyle(s));
+  card.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openStyle(s); } });
+  gridEl.appendChild(card);
+});
+const emptyEl = document.createElement('div');
+emptyEl.className='empty'; emptyEl.innerHTML = `<h3>No styles match those filters.</h3><p>Try removing a filter or clearing them all.</p>`;
+gridEl.appendChild(emptyEl);
+
+function applyFilters(){
+  let shown = 0;
+  STYLES.forEach(s=>{
+    const card = gridEl.querySelector(`.card[data-num="${s.num}"]`);
+    if(matches(s)){ card.classList.remove('hidden'); shown++; }
+    else card.classList.add('hidden');
+  });
+  emptyEl.style.display = shown===0 ? 'block':'none';
+  document.getElementById('topcount').textContent = `${shown} of 50`;
+  document.getElementById('topcount2').textContent = `${shown} of 50`;
+  const fc = ALL_DIMS.reduce((a,d)=>a+active[d].size,0);
+  document.getElementById('topfilters').textContent = fc === 1 ? `1 filter` : `${fc} filters`;
+  const badge = document.getElementById('fbadge');
+  badge.hidden = fc===0; badge.textContent = fc;
+  renderActive();
+  dimUnreachableChips();
+}
+function renderActive(){
+  const bar = document.getElementById('activebar');
+  const box = document.getElementById('activechips'); box.innerHTML = '';
+  let total = 0;
+  ALL_DIMS.forEach(dim=>{
+    active[dim].forEach(tag=>{
+      total++;
+      const p = document.createElement('button'); p.className='active-chip';
+      p.innerHTML = `<span>${tag}</span><span class="x">✕</span>`;
+      p.addEventListener('click',()=>{
+        active[dim].delete(tag);
+        const src = document.querySelector(`.chip[data-dim="${dim}"][data-tag="${CSS.escape(tag)}"]`);
+        if(src) src.classList.remove('active');
+        applyFilters();
+      });
+      box.appendChild(p);
+    });
+  });
+  bar.hidden = total===0;
+}
+function dimUnreachableChips(){
+  // For each chip, tentatively add & see if anything matches; dim if not
+  ALL_DIMS.forEach(dim=>{
+    document.querySelectorAll(`.chip[data-dim="${dim}"]`).forEach(chip=>{
+      const tag = chip.dataset.tag;
+      if(active[dim].has(tag)){ chip.classList.remove('dim'); return; }
+      const saved = active[dim]; const tmp = new Set(saved); tmp.add(tag);
+      active[dim] = tmp;
+      const any = STYLES.some(matches);
+      active[dim] = saved;
+      chip.classList.toggle('dim', !any);
+    });
+  });
+}
+
+/* ---------- Modal ---------- */
+const modal = document.getElementById('modal');
+const backdrop = document.getElementById('backdrop');
+const coverImg = document.getElementById('coverImg');
+const infoEl = document.getElementById('info');
+const tagsEl = document.getElementById('tags');
+const closeBtn = document.getElementById('closeBtn');
+const navPrevBtn = document.getElementById('navPrev');
+const navNextBtn = document.getElementById('navNext');
+const pagerThumbsEl = document.getElementById('pagerThumbs');
+let currentStyle = null, lastFocus = null;
+
+/* Returns the currently visible (filtered) styles, in grid order. */
+function navigableStyles(){
+  return STYLES.filter(s=>{
+    const card = gridEl.querySelector(`.card[data-num="${s.num}"]`);
+    return card && !card.classList.contains('hidden');
+  });
+}
+
+/* Move +1 / -1 within the filtered list (wraps). Called by buttons + keys. */
+function navigateModal(delta){
+  if(!currentStyle) return;
+  const list = navigableStyles();
+  if(list.length <= 1) return;
+  const idx = list.findIndex(s => s.num === currentStyle.num);
+  if(idx < 0) return;
+  const next = list[(idx + delta + list.length) % list.length];
+  openStyle(next, /*preserveFocus=*/true);
+}
+
+function openStyle(s, preserveFocus){
+  currentStyle = s;
+  if(!preserveFocus) lastFocus = document.activeElement;
+  // Cover image: full uncut composite, falls back to the first tile if composite missing.
+  // composite paths in the data are relative to the *parent* of the article folder
+  // (e.g. ".../50 Design Styles ... files/foo.png"). Since this HTML lives INSIDE that
+  // folder, take just the basename so the browser resolves it correctly.
+  let cover = s.composite || (s.tiles && s.tiles[0]) || '';
+  if (cover && !cover.startsWith('tiles/')) {
+    const slash = cover.lastIndexOf('/');
+    if (slash >= 0) cover = cover.slice(slash + 1);
+  }
+  coverImg.src = cover.includes('%') ? cover : encodeURI(cover);
+  coverImg.alt = `${s.name} — example imagery`;
+
+  // Left column: title + description + external reference links.
+  // Use the style name (or its first part if it contains "/") for both lookups.
+  const lookupName = s.name.split('/')[0].trim();
+  const wikiURL  = `https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(lookupName)}&go=Go`;
+  const imagesURL = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(lookupName + ' visual style')}`;
+  const wikiIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5" aria-hidden="true"><path d="M2.5 12c0-4.478 0-6.718 1.391-8.109S7.521 2.5 12 2.5c4.478 0 6.718 0 8.109 1.391S21.5 7.521 21.5 12c0 4.478 0 6.718-1.391 8.109S16.479 21.5 12 21.5c-4.478 0-6.718 0-8.109-1.391S2.5 16.479 2.5 12Z"/><path stroke-linecap="round" d="M5 8h1.05m0 0H7m-.95 0l2.577 6.82C9.177 16.275 9.451 17 9.9 17c.45 0 .724-.726 1.273-2.18L13.75 8h.75m-5 0h.75l2.577 6.82c.55 1.454.824 2.18 1.273 2.18c.45 0 .724-.726 1.273-2.18L17.95 8m0 0H17m.95 0H19"/></svg>`;
+  const imgIcon  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5" aria-hidden="true"><path d="M12 12c2.761 0 5-2.257 5-5.042a5.04 5.04 0 0 0-3.052-4.645c-.702-.3-1.053-.45-1.5-.15S12 2.953 12 3.933zm0 0c-2.761 0-5 2.257-5 5.042a5.04 5.04 0 0 0 3.053 4.645c.701.3 1.052.45 1.5.15s.447-.79.447-1.77z"/><path d="M12 12c0 2.761 2.257 5 5.042 5a5.04 5.04 0 0 0 4.645-3.052c.3-.702.45-1.053.15-1.5s-.79-.448-1.77-.448zm0 0c0-2.761-2.257-5-5.042-5a5.04 5.04 0 0 0-4.645 3.053c-.3.701-.45 1.052-.15 1.5s.79.447 1.77.447z"/></svg>`;
+  infoEl.innerHTML = `
+    <div class="num-line">No. ${String(s.num).padStart(2,'0')}</div>
+    <h2 id="modalTitle">${s.name}</h2>
+    <p class="desc">${s.description}</p>
+    <div class="refs">
+      <a class="ref-link" href="${wikiURL}" target="_blank" rel="noopener noreferrer" aria-label="Open Wikipedia article for ${s.name}">${wikiIcon}<span>Wikipedia</span><span class="arrow" aria-hidden="true">↗</span></a>
+      <a class="ref-link" href="${imagesURL}" target="_blank" rel="noopener noreferrer" aria-label="Search Google Images for ${s.name} visual style">${imgIcon}<span>Google Images</span><span class="arrow" aria-hidden="true">↗</span></a>
+    </div>
+  `;
+
+  // Right column: compact tag sections, each row is "label | pills"
+  const groups = tagsForStyle(s).filter(g => g.tags.length);
+  tagsEl.innerHTML = groups.map(g =>
+    `<div class="section"><h4>${g.label}</h4><div class="pill-list">${
+      g.tags.map(t => `<button class="pill ${g.dim}" data-dim="${g.dim}" data-tag="${escapeAttr(t)}">${t}</button>`).join('')
+    }</div></div>`
+  ).join('');
+
+  tagsEl.querySelectorAll('.pill').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const dim = btn.dataset.dim, tag = btn.dataset.tag;
+      clearAll();
+      active[dim].add(tag);
+      const src = document.querySelector(`.chip[data-dim="${dim}"][data-tag="${CSS.escape(tag)}"]`);
+      if(src) src.classList.add('active');
+      closeModal(true);
+      applyFilters();
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+  });
+
+  modal.classList.add('open'); backdrop.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  renderPager(s);
+  if(!preserveFocus) setTimeout(()=>closeBtn.focus(), 40);
+}
+
+/* Build the bottom thumbnail strip + arrow disabled state. */
+function renderPager(currentS){
+  const list = navigableStyles();
+  const onlyOne = list.length <= 1;
+  navPrevBtn.toggleAttribute('disabled', onlyOne);
+  navNextBtn.toggleAttribute('disabled', onlyOne);
+
+  // Reuse existing thumbs if the list is unchanged; else rebuild.
+  const sig = list.map(s=>s.num).join(',');
+  if(pagerThumbsEl.dataset.sig !== sig){
+    pagerThumbsEl.dataset.sig = sig;
+    pagerThumbsEl.innerHTML = list.map(s=>{
+      const thumb = (s.tiles && s.tiles[0]) || '';
+      const url = thumb ? encodeURI(thumb) : '';
+      return `<button class="pager-thumb" role="tab" data-num="${s.num}" aria-label="Open ${s.name}" style="${url?`background-image:url('${url}')`:''}"></button>`;
+    }).join('');
+    pagerThumbsEl.querySelectorAll('.pager-thumb').forEach(t=>{
+      t.addEventListener('click', ()=>{
+        const num = Number(t.dataset.num);
+        const target = STYLES.find(x=>x.num===num);
+        if(target && target.num !== currentStyle.num) openStyle(target, true);
+      });
+    });
+  }
+
+  // Highlight current + scroll into view (centered).
+  const thumbs = pagerThumbsEl.querySelectorAll('.pager-thumb');
+  thumbs.forEach(t=>{
+    const isCur = Number(t.dataset.num)===currentS.num;
+    t.classList.toggle('current', isCur);
+    t.setAttribute('aria-selected', String(isCur));
+    if(isCur){
+      const rectT = t.getBoundingClientRect();
+      const rectP = pagerThumbsEl.getBoundingClientRect();
+      pagerThumbsEl.scrollBy({left: (rectT.left + rectT.width/2) - (rectP.left + rectP.width/2), behavior: 'smooth'});
+    }
+  });
+}
+function escapeAttr(s){ return s.replace(/"/g,'&quot;'); }
+
+function tagsForStyle(s){
+  const curated = CURATED_DIMS.map(dim=>({dim, label:LABELS[dim], tags: s.tags[dim]||[]}));
+  const token = [
+    {dim:'core_terms', label: TDIMS.core_terms.label, tags: s.terms_core||[]},
+    {dim:'feels',      label: 'Feels',                tags: s.terms_feels||[]},
+    {dim:'fits',       label: 'Fits',                 tags: s.terms_fits||[]},
+  ];
+  return [...curated, ...token];
+}
+
+function closeModal(silent){
+  modal.classList.remove('open'); backdrop.classList.remove('open');
+  document.body.style.overflow = '';
+  if(lastFocus && !silent) lastFocus.focus();
+}
+closeBtn.addEventListener('click', ()=>closeModal());
+backdrop.addEventListener('click', ()=>closeModal());
+navPrevBtn.addEventListener('click', ()=>navigateModal(-1));
+navNextBtn.addEventListener('click', ()=>navigateModal(+1));
+window.addEventListener('keydown',e=>{
+  if(!modal.classList.contains('open')) return;
+  if(e.key==='Escape')        closeModal();
+  else if(e.key==='ArrowLeft')  { e.preventDefault(); navigateModal(-1); }
+  else if(e.key==='ArrowRight') { e.preventDefault(); navigateModal(+1); }
+});
+
+/* Keyboard shortcut: "/" focuses search */
+window.addEventListener('keydown',e=>{
+  if(e.key==='/' && !modal.classList.contains('open') && document.activeElement.tagName!=='INPUT'){
+    e.preventDefault(); searchEl.focus();
+  }
+});
+
+applyFilters();
+</script>
+</body>
+</html>
