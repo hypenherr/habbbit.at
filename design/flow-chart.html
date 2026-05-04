@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sankey Flow Chart</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; min-height: 100vh; padding: 30px; }
+  .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 14px; padding: 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.10); }
+
+  /* Header */
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+  .header-left h1 { color: #2d3748; font-size: 22px; }
+  .header-left p { color: #a0aec0; font-size: 13px; margin-top: 3px; }
+  .btn-export { display: inline-flex; align-items: center; gap: 7px; background: #2d3748; color: white;
+    border: none; border-radius: 7px; padding: 9px 18px; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: background 0.15s; }
+  .btn-export:hover { background: #4a5568; }
+  .btn-export svg { width: 15px; height: 15px; fill: white; }
+
+  /* Chart */
+  #svg-container { width: 100%; border: 1px solid #edf2f7; border-radius: 10px; overflow: hidden; background: #fafbfc; }
+  svg { width: 100%; height: auto; display: block; }
+
+  /* Controls */
+  .controls { margin-top: 28px; }
+  .ctrl-section { margin-bottom: 24px; }
+  .section-header { font-size: 14px; font-weight: 700; color: #4a5568; margin-bottom: 12px;
+    padding-bottom: 7px; border-bottom: 2px solid #edf2f7; letter-spacing: 0.02em; }
+
+  /* Columns editor row */
+  .columns-editor { display: flex; gap: 12px; align-items: flex-start; overflow-x: auto; padding-bottom: 8px; }
+
+  /* Column card */
+  .col-card { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px;
+    padding: 12px 12px 10px; min-width: 190px; flex-shrink: 0; }
+  .col-card-header { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
+  .col-name-input { flex: 1; min-width: 0; padding: 4px 7px; border: 1px solid #cbd5e0;
+    border-radius: 5px; font-size: 12px; font-weight: 700; color: #2d3748; background: white; }
+  .col-name-input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgba(102,126,234,0.2); }
+
+  /* Add column button */
+  .btn-add-col { display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 5px; min-width: 76px; align-self: center; height: 90px; flex-shrink: 0;
+    background: none; border: 2px dashed #cbd5e0; border-radius: 10px;
+    color: #718096; font-size: 11px; font-weight: 600; cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s; }
+  .btn-add-col:hover { border-color: #667eea; color: #667eea; background: #f0f0ff; }
+  .btn-add-col .plus-lg { font-size: 22px; line-height: 1; }
+
+  /* Section rows */
+  .label-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+  input[type="color"] { width: 26px; height: 26px; border: 2px solid #e2e8f0; border-radius: 5px;
+    padding: 1px; cursor: pointer; background: none; flex-shrink: 0; }
+  input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+  input[type="color"]::-webkit-color-swatch { border: none; border-radius: 3px; }
+  .label-input { flex: 1; min-width: 0; padding: 4px 7px; border: 1px solid #cbd5e0;
+    border-radius: 5px; font-size: 13px; }
+  .label-input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgba(102,126,234,0.25); }
+
+  /* Trash buttons */
+  .btn-del { display: inline-flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; flex-shrink: 0; background: none; border: none;
+    border-radius: 5px; cursor: pointer; color: #cbd5e0; padding: 0;
+    transition: color 0.15s, background 0.15s; }
+  .btn-del:hover { color: #e53e3e; background: #fff5f5; }
+  .btn-del svg { width: 13px; height: 13px; }
+  .btn-del-col { width: 26px; height: 26px; }
+  .btn-del-col svg { width: 14px; height: 14px; }
+
+  /* Add section button */
+  .btn-add-row { display: flex; align-items: center; justify-content: center; gap: 5px;
+    margin-top: 6px; width: 100%; background: none; border: 1.5px dashed #cbd5e0;
+    border-radius: 6px; color: #718096; font-size: 12px; font-weight: 600;
+    padding: 5px 10px; cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s; }
+  .btn-add-row:hover { border-color: #667eea; color: #667eea; background: #f0f0ff; }
+
+  /* Flow tables */
+  .flow-tables { display: flex; flex-direction: column; gap: 24px; }
+  .flow-table-block { }
+  .flow-table-title { font-size: 13px; font-weight: 700; color: #4a5568;
+    margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .flow-arrow { color: #a0aec0; font-size: 15px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #edf2f7; color: #4a5568; padding: 7px 9px; border: 1px solid #e2e8f0; font-weight: 600; }
+  td { padding: 5px 7px; border: 1px solid #e2e8f0; text-align: center; }
+  td:first-child { font-weight: 600; color: #4a5568; text-align: left; white-space: nowrap; }
+  input[type="number"] { width: 52px; padding: 3px 5px; border: 1px solid #cbd5e0;
+    border-radius: 4px; text-align: center; font-size: 13px; }
+  input[type="number"]:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgba(102,126,234,0.25); }
+  .hint { margin-top: 8px; font-size: 12px; color: #b0bac8; }
+  .color-dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px;
+    vertical-align: middle; margin-right: 4px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="header-left">
+      <h1>Flow Chart</h1>
+      <p>Edit labels, colors, and flow values — the chart updates live.</p>
+    </div>
+    <button class="btn-export" onclick="exportSVG()">
+      <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+      Export SVG
+    </button>
+  </div>
+
+  <div id="svg-container">
+    <svg id="sankey-svg" viewBox="0 0 800 520" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="controls">
+    <div class="ctrl-section">
+      <div class="section-header">Edit Labels &amp; Colors</div>
+      <div id="labels-container"></div>
+    </div>
+    <div class="ctrl-section">
+      <div class="section-header">Edit Flow Values</div>
+      <div id="tables-container"></div>
+      <p class="hint">Set a value to 0 to remove a connection. Rows = source column, Columns = destination column.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── CONSTANTS ─────────────────────────────────────────────────────────────
+const COLOR_POOL = [
+  '#718096','#4a5568','#a0aec0','#2d3748','#b7bec8',
+  '#68d391','#f6ad55','#63b3ed','#fc8181','#b794f4',
+  '#f687b3','#4fd1c5','#fbd38d','#90cdf4','#d6bcfa','#9ae6b4'
+];
+
+const BAR_W   = 26;   // width of each node bar
+const RIB_W   = 440;  // horizontal space between right edge of bar c and left edge of bar c+1
+const LBL_L   = 140;  // left margin (space for col-0 labels)
+const LBL_R   = 140;  // right margin (space for last-col labels)
+const SVG_H   = 520;
+const TOP     = 50;   // vertical space for column name header
+const NODE_PAD = 10;  // gap between node bars within a column
+
+const TRASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+  stroke-linecap="round" stroke-linejoin="round">
+  <polyline points="3 6 5 6 21 6"/>
+  <path d="M19 6l-1 14H6L5 6"/>
+  <path d="M10 11v6"/><path d="M14 11v6"/>
+  <path d="M9 6V4h6v2"/>
+</svg>`;
+
+// ─── STATE ─────────────────────────────────────────────────────────────────
+// columns: array of { name, sections: [{label, color}] }
+// flows[c][i][j] = value FROM columns[c].sections[i] TO columns[c+1].sections[j]
+let state = {
+  columns: [
+    { name: 'Column 1', sections: [
+      {label:'A', color:'#718096'}, {label:'B', color:'#4a5568'},
+      {label:'C', color:'#a0aec0'}, {label:'D', color:'#2d3748'},
+      {label:'E', color:'#b7bec8'},
+    ]},
+    { name: 'Column 2', sections: [
+      {label:'1', color:'#68d391'}, {label:'2', color:'#f6ad55'},
+      {label:'3', color:'#63b3ed'}, {label:'4', color:'#fc8181'},
+      {label:'5', color:'#b794f4'},
+    ]},
+  ],
+  flows: [
+    [
+      [18, 10,  0,  6,  0],
+      [ 0, 14, 12,  0,  8],
+      [ 9,  0,  0, 16,  6],
+      [ 0,  7, 10, 13,  0],
+      [ 0,  8,  9,  0, 11],
+    ]
+  ]
+};
+
+// ─── HELPERS ───────────────────────────────────────────────────────────────
+function colX(c) { return LBL_L + c * (BAR_W + RIB_W); }
+function svgW(N) { return LBL_L + (N - 1) * (BAR_W + RIB_W) + BAR_W + LBL_R; }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function hexAlpha(hex, a) {
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+function emptyMatrix(rows, cols) {
+  return Array.from({length: rows}, () => new Array(cols).fill(0));
+}
+
+// ─── COLUMN OPERATIONS ─────────────────────────────────────────────────────
+function addColumn() {
+  const N = state.columns.length;
+  const nPrev = state.columns[N-1].sections.length;
+  state.columns.push({ name: `Column ${N+1}`, sections: [
+    {label:'A', color: COLOR_POOL[0]},
+    {label:'B', color: COLOR_POOL[1]},
+  ]});
+  state.flows.push(emptyMatrix(nPrev, 2));
+  render(); rebuildAll();
+}
+
+function deleteColumn(c) {
+  const N = state.columns.length;
+  if (N <= 1) return;
+  if (c === 0) {
+    state.flows.splice(0, 1);
+  } else if (c === N - 1) {
+    state.flows.splice(c - 1, 1);
+  } else {
+    // Replace the two adjacent matrices with one empty matrix
+    const nPrev = state.columns[c-1].sections.length;
+    const nNext = state.columns[c+1].sections.length;
+    state.flows.splice(c-1, 2, emptyMatrix(nPrev, nNext));
+  }
+  state.columns.splice(c, 1);
+  render(); rebuildAll();
+}
+
+// ─── SECTION OPERATIONS ────────────────────────────────────────────────────
+function addSection(c) {
+  const n = state.columns[c].sections.length;
+  state.columns[c].sections.push({ label: 'New', color: COLOR_POOL[n % COLOR_POOL.length] });
+  // c is source in flows[c]: add new row
+  if (c < state.columns.length - 1)
+    state.flows[c].push(new Array(state.columns[c+1].sections.length).fill(0));
+  // c is destination in flows[c-1]: add new column to every row
+  if (c > 0)
+    for (const row of state.flows[c-1]) row.push(0);
+  render(); rebuildAll();
+}
+
+function deleteSection(c, i) {
+  if (state.columns[c].sections.length <= 1) return;
+  state.columns[c].sections.splice(i, 1);
+  // c is source in flows[c]: remove row i
+  if (c < state.columns.length - 1) state.flows[c].splice(i, 1);
+  // c is destination in flows[c-1]: remove column i from every row
+  if (c > 0) for (const row of state.flows[c-1]) row.splice(i, 1);
+  render(); rebuildAll();
+}
+
+// ─── LAYOUT ────────────────────────────────────────────────────────────────
+function calcLayout() {
+  const N   = state.columns.length;
+  const AVAIL = SVG_H - TOP - 20;
+  let allNodes = [];
+
+  for (let c = 0; c < N; c++) {
+    const secs = state.columns[c].sections;
+    const nSec = secs.length;
+    const nodeH = (AVAIL - (nSec - 1) * NODE_PAD) / nSec;
+    allNodes.push(secs.map((sec, i) => ({
+      x: colX(c), y: TOP + i * (nodeH + NODE_PAD),
+      w: BAR_W, h: nodeH,
+      color: sec.color, label: sec.label,
+    })));
+  }
+
+  let allPaths = [];
+  for (let c = 0; c < N - 1; c++) {
+    const src = allNodes[c], dst = allNodes[c+1];
+    const nSrc = src.length, nDst = dst.length;
+    const srcTot = state.flows[c].map(row => row.reduce((a,b)=>a+b, 0));
+    const dstTot = new Array(nDst).fill(0);
+    for (let j=0; j<nDst; j++) for (let i=0; i<nSrc; i++) dstTot[j] += state.flows[c][i][j];
+
+    const sOff = src.map(n => n.y);
+    const dOff = dst.map(n => n.y);
+    const paths = [];
+
+    for (let i=0; i<nSrc; i++) {
+      if (!srcTot[i]) continue;
+      for (let j=0; j<nDst; j++) {
+        const v = state.flows[c][i][j];
+        if (!v) continue;
+        const h0 = src[i].h * v / srcTot[i];
+        const h1 = dst[j].h * v / dstTot[j];
+        paths.push({ x0: colX(c)+BAR_W, y0: sOff[i], h0, x1: colX(c+1), y1: dOff[j], h1, color: state.columns[c].sections[i].color });
+        sOff[i] += h0; dOff[j] += h1;
+      }
+    }
+    allPaths.push(paths);
+  }
+  return { allNodes, allPaths };
+}
+
+// ─── RENDER ────────────────────────────────────────────────────────────────
+function ribbonPath(x0,y0,h0, x1,y1,h1) {
+  const cx = (x0+x1)/2;
+  return `M${x0},${y0} C${cx},${y0} ${cx},${y1} ${x1},${y1} L${x1},${y1+h1} C${cx},${y1+h1} ${cx},${y0+h0} ${x0},${y0+h0} Z`;
+}
+
+function render() {
+  const N = state.columns.length;
+  const layout = calcLayout();
+  const svg = document.getElementById('sankey-svg');
+  svg.setAttribute('viewBox', `0 0 ${svgW(N)} ${SVG_H}`);
+
+  let h = '';
+
+  // Ribbons (behind bars)
+  for (let c=0; c<N-1; c++)
+    for (const f of layout.allPaths[c]) {
+      h += `<path d="${ribbonPath(f.x0,f.y0,f.h0, f.x1,f.y1,f.h1)}" fill="${hexAlpha(f.color,0.62)}" stroke="none"/>`;
+    }
+
+  // Bars + labels
+  for (let c=0; c<N; c++) {
+    const cx = colX(c);
+    // Column name
+    h += `<text x="${cx + BAR_W/2}" y="${TOP-12}" text-anchor="middle"
+      font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="700" fill="#4a5568">${esc(state.columns[c].name)}</text>`;
+
+    for (let i=0; i<layout.allNodes[c].length; i++) {
+      const n = layout.allNodes[c][i];
+      h += `<rect x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" fill="${n.color}" rx="3"/>`;
+      if (c === 0) {
+        h += `<text x="${n.x-12}" y="${n.y+n.h/2}" text-anchor="end" dominant-baseline="middle"
+          font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="700" fill="#2d3748">${esc(n.label)}</text>`;
+      } else {
+        h += `<text x="${n.x+n.w+12}" y="${n.y+n.h/2}" text-anchor="start" dominant-baseline="middle"
+          font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="700" fill="#2d3748">${esc(n.label)}</text>`;
+      }
+    }
+  }
+
+  svg.innerHTML = h;
+}
+
+// ─── EXPORT ────────────────────────────────────────────────────────────────
+function exportSVG() {
+  const svg = document.getElementById('sankey-svg');
+  const clone = svg.cloneNode(true);
+  clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+  const str = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(clone);
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([str], {type:'image/svg+xml;charset=utf-8'})),
+    download: 'flow-chart.svg'
+  });
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+// ─── CONTROLS ──────────────────────────────────────────────────────────────
+function rebuildAll() { buildLabels(); rebuildTables(); }
+
+function buildLabels() {
+  const N = state.columns.length;
+  let h = '<div class="columns-editor">';
+
+  for (let c=0; c<N; c++) {
+    h += `<div class="col-card">`;
+    // Column header row
+    h += `<div class="col-card-header">
+      <input type="text" class="col-name-input" value="${esc(state.columns[c].name)}" data-c="${c}">
+      <button class="btn-del btn-del-col" onclick="deleteColumn(${c})" title="Delete column"
+        ${N <= 1 ? 'style="visibility:hidden"' : ''}>${TRASH}</button>
+    </div>`;
+    // Section rows
+    for (let i=0; i<state.columns[c].sections.length; i++) {
+      const s = state.columns[c].sections[i];
+      h += `<div class="label-row">
+        <input type="color" class="color-picker" value="${s.color}" data-c="${c}" data-i="${i}">
+        <input type="text" class="label-input" value="${esc(s.label)}" maxlength="28" data-c="${c}" data-i="${i}">
+        <button class="btn-del" onclick="deleteSection(${c},${i})" title="Delete section">${TRASH}</button>
+      </div>`;
+    }
+    h += `<button class="btn-add-row" onclick="addSection(${c})">
+      <span style="font-size:15px;line-height:1">+</span> Add section
+    </button>`;
+    h += `</div>`;
+  }
+
+  h += `<button class="btn-add-col" onclick="addColumn()">
+    <span class="plus-lg">+</span>Add Column
+  </button>`;
+  h += `</div>`;
+  document.getElementById('labels-container').innerHTML = h;
+
+  // Column name listeners
+  document.querySelectorAll('.col-name-input').forEach(el => {
+    el.addEventListener('input', e => {
+      state.columns[+e.target.dataset.c].name = e.target.value;
+      render(); syncTitles();
+    });
+  });
+  // Color picker listeners
+  document.querySelectorAll('.color-picker').forEach(el => {
+    el.addEventListener('input', e => {
+      const c=+e.target.dataset.c, i=+e.target.dataset.i;
+      state.columns[c].sections[i].color = e.target.value;
+      render(); syncTableHeaders();
+    });
+  });
+  // Label text listeners
+  document.querySelectorAll('.label-input').forEach(el => {
+    el.addEventListener('input', e => {
+      const c=+e.target.dataset.c, i=+e.target.dataset.i;
+      state.columns[c].sections[i].label = e.target.value;
+      render(); syncTableHeaders();
+    });
+  });
+}
+
+function rebuildTables() {
+  const N = state.columns.length;
+  let h = '<div class="flow-tables">';
+
+  if (N < 2) {
+    h += '<p style="color:#a0aec0;font-size:13px;">Add a second column to define connections.</p>';
+  } else {
+    for (let c=0; c<N-1; c++) {
+      const src = state.columns[c].sections;
+      const dst = state.columns[c+1].sections;
+      h += `<div class="flow-table-block">
+        <div class="flow-table-title" data-pair="${c}">
+          <span class="col-name-span">${esc(state.columns[c].name)}</span>
+          <span class="flow-arrow">→</span>
+          <span class="col-name-span">${esc(state.columns[c+1].name)}</span>
+        </div>
+        <table class="flow-table" data-pair="${c}">
+          <thead><tr><th>From \\ To</th>`;
+      for (const d of dst)
+        h += `<th><span class="color-dot" style="background:${d.color}"></span>${esc(d.label)}</th>`;
+      h += `</tr></thead><tbody>`;
+      for (let i=0; i<src.length; i++) {
+        h += `<tr><td><span class="color-dot" style="background:${src[i].color}"></span>${esc(src[i].label)}</td>`;
+        for (let j=0; j<dst.length; j++)
+          h += `<td><input type="number" min="0" max="9999" value="${state.flows[c][i][j]}" data-c="${c}" data-i="${i}" data-j="${j}"></td>`;
+        h += `</tr>`;
+      }
+      h += `</tbody></table></div>`;
+    }
+  }
+
+  h += '</div>';
+  document.getElementById('tables-container').innerHTML = h;
+
+  document.querySelectorAll('input[type="number"]').forEach(el => {
+    el.addEventListener('input', e => {
+      const c=+e.target.dataset.c, i=+e.target.dataset.i, j=+e.target.dataset.j;
+      state.flows[c][i][j] = Math.max(0, parseInt(e.target.value) || 0);
+      render();
+    });
+  });
+}
+
+// Sync helpers (avoid full rebuild to preserve focus during typing)
+function syncTitles() {
+  document.querySelectorAll('.flow-table-title').forEach(el => {
+    const c = +el.dataset.pair;
+    const spans = el.querySelectorAll('.col-name-span');
+    if (spans[0]) spans[0].textContent = state.columns[c].name;
+    if (spans[1]) spans[1].textContent = state.columns[c+1].name;
+  });
+}
+function syncTableHeaders() {
+  document.querySelectorAll('.flow-table').forEach(table => {
+    const c = +table.dataset.pair;
+    const src = state.columns[c].sections;
+    const dst = state.columns[c+1].sections;
+    const ths = table.querySelectorAll('thead th');
+    for (let j=0; j<dst.length; j++)
+      if (ths[j+1]) ths[j+1].innerHTML = `<span class="color-dot" style="background:${dst[j].color}"></span>${esc(dst[j].label)}`;
+    const tds = table.querySelectorAll('tbody tr td:first-child');
+    for (let i=0; i<src.length; i++)
+      if (tds[i]) tds[i].innerHTML = `<span class="color-dot" style="background:${src[i].color}"></span>${esc(src[i].label)}`;
+  });
+}
+
+// ─── INIT ──────────────────────────────────────────────────────────────────
+render();
+rebuildAll();
+</script>
+</body>
+</html>
